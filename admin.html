@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Marketplace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section" id="admin-root">
+    <div class="container" style="max-width:820px;">
+      <h1 class="panel-title" style="font-size:24px;" data-i18n="admin_title">Admin</h1>
+
+      <div class="tabs" style="margin-top:20px;">
+        <button class="active" data-tab="tab-products" data-i18n="admin_tab_products">Products</button>
+        <button data-tab="tab-inquiries" data-i18n="admin_tab_inquiries">Inquiries</button>
+      </div>
+
+      <div id="tab-products" class="tab-panel">
+        <div class="admin-toolbar">
+          <span></span>
+          <button id="add-product-btn" class="btn btn-navy btn-sm" data-i18n="admin_add_product">Add product</button>
+        </div>
+        <div id="admin-products-list"></div>
+      </div>
+
+      <div id="tab-inquiries" class="tab-panel hidden">
+        <div id="admin-inquiries-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-overlay" id="product-form-panel">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-head">
+        <h3 data-i18n="admin_add_product">Add product</h3>
+      </div>
+      <form id="product-form">
+        <div class="field">
+          <label for="p-name" data-i18n="admin_product_name">Product name</label>
+          <input type="text" id="p-name" name="name" required>
+        </div>
+        <div class="field">
+          <label for="p-price" data-i18n="admin_product_price">Price (RWF)</label>
+          <input type="number" id="p-price" name="price" min="0" step="1" required>
+        </div>
+        <div class="field">
+          <label for="p-category" data-i18n="admin_product_category">Category</label>
+          <input type="text" id="p-category" name="category">
+        </div>
+        <div class="field">
+          <label for="p-image" data-i18n="admin_product_image_url">Image URL</label>
+          <input type="url" id="p-image" name="imageUrl" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label for="p-description" data-i18n="admin_product_description">Description</label>
+          <textarea id="p-description" name="description"></textarea>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button type="button" id="product-form-cancel" class="btn btn-outline btn-block" data-i18n="admin_cancel">Cancel</button>
+          <button type="submit" class="btn btn-gold btn-block" data-i18n="admin_save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { renderChrome } from './js/components.js';
+    import { initAdmin } from './js/admin.js';
+    renderChrome();
+    initAdmin();
+  </script>
+</body>
+</html>

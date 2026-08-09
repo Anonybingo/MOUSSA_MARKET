@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// Deploy with: firebase deploy --only firestore:rules
+// (or paste into Firebase console -> Firestore Database -> Rules)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // ---- users ----
+    // A user can read and create only their own profile doc, and can never
+    // set isAdmin themselves (see README for how to promote an admin).
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.isAdmin == false;
+      allow update, delete: if false;
+    }
+
+    // ---- products ----
+    // Anyone can browse the catalog. Only an admin account can add, edit,
+    // or remove listings.
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---- inquiries ----
+    // A signed-in user can open an inquiry for themselves (always starting
+    // as "pending"), read their own inquiries, and nothing else. Admins can
+    // read and update all of them (status changes) from the admin panel.
+    match /inquiries/{inquiryId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+  }
+}

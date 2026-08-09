@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products — Marketplace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section" style="padding-top:36px;">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-i18n="browse_title">All products</h2>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap;">
+        <input
+          type="text"
+          id="search-input"
+          data-i18n-placeholder="browse_search_placeholder"
+          placeholder="Search by name..."
+          style="flex:1; min-width:200px; border:1px solid var(--border); border-radius:8px; padding:11px 13px; font-size:14px;"
+        >
+        <select id="category-filter" class="select-inline" style="padding:11px 13px;"></select>
+      </div>
+
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { renderChrome } from './js/components.js';
+    import { renderProductGrid, populateCategoryFilter } from './js/products.js';
+
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('q')) searchInput.value = params.get('q');
+
+    function currentFilters() {
+      return { search: searchInput.value, category: categoryFilter.value };
+    }
+
+    async function refresh() {
+      await populateCategoryFilter('category-filter');
+      if (params.get('q')) categoryFilter.value = '';
+      await renderProductGrid('product-grid', currentFilters());
+    }
+
+    document.addEventListener('translations-ready', refresh);
+    renderChrome();
+
+    searchInput.addEventListener('input', () => renderProductGrid('product-grid', currentFilters()));
+    categoryFilter.addEventListener('change', () => renderProductGrid('product-grid', currentFilters()));
+  </script>
+</body>
+</html>
