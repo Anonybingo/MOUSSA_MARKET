@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marketplace</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <div id="site-header"></div>
@@ -15,7 +15,7 @@
       <span class="eyebrow" data-i18n="hero_eyebrow">Buy and sell directly</span>
       <h1 data-i18n="hero_title">Find what you need, deal directly</h1>
       <p data-i18n="hero_subtitle">Browse listings, then contact the seller to agree on a price.</p>
-      <form class="search-bar" onsubmit="event.preventDefault(); window.location.href = 'products.html?q=' + encodeURIComponent(this.q.value);">
+      <form class="search-bar" onsubmit="event.preventDefault(); window.location.href = '/products/?q=' + encodeURIComponent(this.q.value);">
         <input type="text" name="q" data-i18n-placeholder="search_placeholder" placeholder="Search products...">
         <button type="submit" data-i18n="search_button">Search</button>
       </form>
@@ -26,7 +26,7 @@
     <div class="container">
       <div class="section-head">
         <h2 data-i18n="featured_title">Featured products</h2>
-        <a href="products.html" data-i18n="featured_viewall">View all</a>
+        <a href="/products/" data-i18n="featured_viewall">View all</a>
       </div>
       <div class="product-grid" id="featured-grid"></div>
     </div>
@@ -35,8 +35,8 @@
   <div id="site-footer"></div>
 
   <script type="module">
-    import { renderChrome } from './js/components.js';
-    import { renderFeatured } from './js/products.js';
+    import { renderChrome } from '/js/components.js';
+    import { renderFeatured } from '/js/products.js';
 
     document.addEventListener('translations-ready', () => renderFeatured('featured-grid', 3));
     renderChrome();

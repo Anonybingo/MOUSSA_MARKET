@@ -52,7 +52,7 @@ export async function initDashboard() {
     const inquiries = snap.docs.map((d) => d.data());
     mount.innerHTML = inquiries.length
       ? inquiries.map(inquiryRowHTML).join('')
-      : `<div class="empty-state"><i class="ti ti-inbox" aria-hidden="true"></i><p>${t('dashboard_empty')}</p><a href="products.html" class="btn btn-navy" style="margin-top:14px; display:inline-flex;">${t('dashboard_empty_cta')}</a></div>`;
+      : `<div class="empty-state"><i class="ti ti-inbox" aria-hidden="true"></i><p>${t('dashboard_empty')}</p><a href="/products/" class="btn btn-navy" style="margin-top:14px; display:inline-flex;">${t('dashboard_empty_cta')}</a></div>`;
   }
 
   await render();

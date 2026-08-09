@@ -81,8 +81,8 @@ function updateContactButton() {
 
 function onContactClick() {
   if (!currentUser) {
-    const redirect = encodeURIComponent(`product.html?id=${currentProduct.id}`);
-    window.location.href = `login.html?redirect=${redirect}`;
+    const redirect = encodeURIComponent(`/product/?id=${currentProduct.id}`);
+    window.location.href = `/login/?redirect=${redirect}`;
     return;
   }
   const overlay = document.getElementById('contact-modal');

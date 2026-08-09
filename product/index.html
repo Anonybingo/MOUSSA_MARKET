@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — Marketplace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container">
+      <div id="product-detail" style="display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start;"></div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <div class="modal-overlay" id="contact-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 data-i18n="contact_modal_title">Contact the seller</h3>
+        <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <form id="contact-form">
+        <div class="field">
+          <label for="message" data-i18n="contact_modal_message_label">Message (optional)</label>
+          <textarea id="message" name="message" data-i18n-placeholder="contact_modal_message_placeholder" placeholder="Ask about condition, availability, delivery..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold btn-block" data-i18n="contact_modal_send">Send inquiry</button>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    @media (max-width: 720px) {
+      #product-detail { grid-template-columns: 1fr !important; }
+    }
+  </style>
+
+  <script type="module">
+    import { renderChrome } from '/js/components.js';
+    import { initProductDetail } from '/js/product-detail.js';
+    renderChrome();
+    initProductDetail();
+  </script>
+</body>
+</html>

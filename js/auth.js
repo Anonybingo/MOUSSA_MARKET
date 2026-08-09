@@ -15,7 +15,7 @@ function showMsg(el, text, type) {
 
 function redirectTarget() {
   const raw = new URLSearchParams(window.location.search).get('redirect');
-  return raw ? decodeURIComponent(raw) : 'dashboard.html';
+  return raw ? decodeURIComponent(raw) : '/dashboard/';
 }
 
 export function initLoginForm() {

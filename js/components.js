@@ -8,13 +8,13 @@ import { loadLanguage, initLangSwitcher, currentLang } from './i18n.js';
 
 const HEADER_HTML = `
 <div class="container">
-  <a href="index.html" class="site-logo">Market<span>place</span></a>
+  <a href="/" class="site-logo">Market<span>place</span></a>
   <nav class="site-nav">
-    <a href="index.html" data-i18n="nav_home">Home</a>
-    <a href="products.html" data-i18n="nav_products">Products</a>
-    <a href="about.html" data-i18n="nav_about">About</a>
-    <a href="dashboard.html" id="nav-dashboard" class="hidden" data-i18n="nav_dashboard">My inquiries</a>
-    <a href="admin.html" id="nav-admin" class="hidden" data-i18n="nav_admin">Admin</a>
+    <a href="/" data-i18n="nav_home">Home</a>
+    <a href="/products/" data-i18n="nav_products">Products</a>
+    <a href="/about/" data-i18n="nav_about">About</a>
+    <a href="/dashboard/" id="nav-dashboard" class="hidden" data-i18n="nav_dashboard">My inquiries</a>
+    <a href="/admin/" id="nav-admin" class="hidden" data-i18n="nav_admin">Admin</a>
   </nav>
   <div class="header-actions">
     <div class="lang-switch">
@@ -25,7 +25,7 @@ const HEADER_HTML = `
         <option value="sw">SW</option>
       </select>
     </div>
-    <a href="login.html" id="nav-login" class="btn btn-gold btn-sm" data-i18n="nav_login">Log in</a>
+    <a href="/login/" id="nav-login" class="btn btn-gold btn-sm" data-i18n="nav_login">Log in</a>
     <div id="nav-user" class="user-chip hidden">
       <span id="nav-user-name"></span>
       <button id="nav-logout" class="btn btn-outline-light btn-sm" data-i18n="nav_logout">Log out</button>
@@ -59,9 +59,13 @@ export async function renderChrome() {
 }
 
 function highlightActiveNav() {
-  const path = window.location.pathname.split('/').pop() || 'index.html';
+  // With folder-style URLs (/products/ instead of products.html), compare
+  // the first path segment rather than the last — a trailing slash makes
+  // split('/').pop() return '' for every page, which matched nothing.
+  const currentSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
   document.querySelectorAll('.site-nav a').forEach((a) => {
-    if (a.getAttribute('href') === path) a.classList.add('active');
+    const hrefSegment = (a.getAttribute('href') || '').split('/').filter(Boolean)[0] || '';
+    if (hrefSegment === currentSegment) a.classList.add('active');
   });
 }
 
@@ -107,7 +111,7 @@ function watchAuthState() {
 // login if signed out; resolves with the user once auth state is known.
 // Note: this only protects the page UI — actual data access is enforced by
 // Firestore security rules regardless of what this function does.
-export function requireAuth(redirectTo = 'login.html') {
+export function requireAuth(redirectTo = '/login/') {
   return new Promise((resolve) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       unsubscribe();

@@ -7,14 +7,19 @@ auth/data/hosting, nothing to compile.
 
 ## What's here
 
+Each page lives in its own folder as `index.html`, so URLs are clean
+(`/login/` rather than `login.html`) — this is standard static-hosting
+behavior, works automatically on Firebase Hosting and with the local dev
+servers below, nothing extra to configure.
+
 ```
-index.html         Home — hero, search, featured products
-products.html       Browse — search + category filter
-product.html         Single product + "Contact us" inquiry form
-login.html / signup.html   Firebase Auth
-dashboard.html       Signed-in user's own inquiries, with a status stepper
-about.html          Static about/contact page
-admin.html          Product catalog + inquiry status management
+index.html            Home — hero, search, featured products
+products/index.html    Browse — search + category filter
+product/index.html      Single product + "Contact us" inquiry form
+login/index.html, signup/index.html   Firebase Auth
+dashboard/index.html    Signed-in user's own inquiries, with a status stepper
+about/index.html       Static about/contact page
+admin/index.html       Product catalog + inquiry status management
 
 css/style.css        Design system (navy / off-white / gold, from the mockup)
 js/firebase-config.js  <- your Firebase project keys go here
@@ -24,6 +29,13 @@ js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
 
 firestore.rules       Security rules — deploy these, see below
 ```
+
+Every internal link, redirect, and asset reference uses root-absolute
+paths (`/products/`, `/js/products.js`, `/lang/en.json`) rather than
+relative ones — with pages now sitting at different folder depths, that's
+what keeps a shared file like `components.js` correct no matter which
+page loaded it. Worth knowing if you add a new page: link to it as
+`/newpage/`, not `newpage.html`.
 
 ## Setup
 

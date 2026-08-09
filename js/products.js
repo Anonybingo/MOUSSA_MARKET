@@ -19,7 +19,7 @@ function productCardHTML(id, p) {
     ? `<img src="${escapeHtml(p.imageUrl)}" alt="${name}">`
     : `<i class="ti ti-photo" aria-hidden="true"></i>`;
   return `
-    <a href="product.html?id=${encodeURIComponent(id)}" class="product-card">
+    <a href="/product/?id=${encodeURIComponent(id)}" class="product-card">
       <div class="thumb">${thumb}</div>
       <div class="body">
         <span class="category">${category}</span>

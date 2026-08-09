@@ -18,7 +18,11 @@ function getSavedLang() {
 export async function loadLanguage(lang) {
   if (!SUPPORTED_LANGS.includes(lang)) lang = DEFAULT_LANG;
   try {
-    const res = await fetch(`lang/${lang}.json`);
+    // root-absolute path: this module is shared by pages at the site root
+    // (/) and inside subfolders (/login/, /products/, etc.), so a plain
+    // relative "lang/en.json" would resolve differently — and wrongly —
+    // depending on which page loaded it.
+    const res = await fetch(`/lang/${lang}.json`);
     currentStrings = await res.json();
   } catch (err) {
     if (lang !== DEFAULT_LANG) {
