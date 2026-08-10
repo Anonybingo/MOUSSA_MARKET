@@ -71,5 +71,20 @@
   "admin_no_inquiries": "No inquiries yet.",
   "common_loading": "Loading...",
   "common_close": "Close",
-  "common_required": "This field is required."
+  "common_required": "This field is required.",
+  "nav_signup": "Sign up",
+  "login_forgot_link": "Forgot password?",
+  "login_reset_email_label": "Enter your email",
+  "login_reset_send": "Send reset link",
+  "login_reset_success": "Check your email for a link to reset your password.",
+  "login_reset_error": "Couldn't send the reset email. Check the address and try again.",
+  "login_reset_invalid_email": "Enter a valid email address.",
+  "signup_confirm_password": "Confirm password",
+  "signup_password_mismatch": "Passwords don't match.",
+  "admin_product_image_label": "Product image",
+  "admin_image_hint_edit": "Leave empty to keep the current image",
+  "admin_image_invalid_type": "Please choose an image file (JPG, PNG, or WEBP).",
+  "admin_image_too_large": "Image must be under 5MB.",
+  "admin_image_uploading": "Uploading image...",
+  "admin_save_error": "Couldn't save the product. Please try again."
 }

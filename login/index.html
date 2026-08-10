@@ -24,8 +24,27 @@
         </div>
         <div class="field">
           <label for="password" data-i18n="login_password">Password</label>
-          <input type="password" id="password" name="password" required autocomplete="current-password">
+          <div class="input-with-action">
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+            <button type="button" class="input-icon-btn" data-toggle-password="password" aria-label="Show password">
+              <i class="ti ti-eye" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
+
+        <div class="forgot-link-row">
+          <a href="#" id="forgot-password-link" data-i18n="login_forgot_link">Forgot password?</a>
+        </div>
+
+        <div class="forgot-panel hidden" id="forgot-password-panel">
+          <div class="field">
+            <label for="reset-email" data-i18n="login_reset_email_label">Enter your email</label>
+            <input type="email" id="reset-email" autocomplete="email">
+          </div>
+          <button type="button" id="send-reset-btn" class="btn btn-outline btn-block btn-sm" data-i18n="login_reset_send">Send reset link</button>
+          <div class="form-msg" id="reset-msg" style="margin-top:10px; margin-bottom:0;"></div>
+        </div>
+
         <button type="submit" class="btn btn-gold btn-block" data-i18n="login_button">Log in</button>
       </form>
 
@@ -40,9 +59,11 @@
 
   <script type="module">
     import { renderChrome } from '/js/components.js';
-    import { initLoginForm } from '/js/auth.js';
+    import { initLoginForm, initPasswordToggles, initForgotPassword } from '/js/auth.js';
     renderChrome();
     initLoginForm();
+    initPasswordToggles();
+    initForgotPassword();
   </script>
 </body>
 </html>

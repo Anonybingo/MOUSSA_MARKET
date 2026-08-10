@@ -71,5 +71,20 @@
   "admin_no_inquiries": "Aucune demande pour le moment.",
   "common_loading": "Chargement...",
   "common_close": "Fermer",
-  "common_required": "Ce champ est obligatoire."
+  "common_required": "Ce champ est obligatoire.",
+  "nav_signup": "S'inscrire",
+  "login_forgot_link": "Mot de passe oublié ?",
+  "login_reset_email_label": "Entrez votre e-mail",
+  "login_reset_send": "Envoyer le lien",
+  "login_reset_success": "Vérifiez votre e-mail pour réinitialiser votre mot de passe.",
+  "login_reset_error": "Impossible d'envoyer l'e-mail. Vérifiez l'adresse et réessayez.",
+  "login_reset_invalid_email": "Entrez une adresse e-mail valide.",
+  "signup_confirm_password": "Confirmer le mot de passe",
+  "signup_password_mismatch": "Les mots de passe ne correspondent pas.",
+  "admin_product_image_label": "Image du produit",
+  "admin_image_hint_edit": "Laissez vide pour garder l'image actuelle",
+  "admin_image_invalid_type": "Choisissez une image (JPG, PNG ou WEBP).",
+  "admin_image_too_large": "L'image doit faire moins de 5 Mo.",
+  "admin_image_uploading": "Téléversement de l'image...",
+  "admin_save_error": "Impossible d'enregistrer le produit. Réessayez."
 }

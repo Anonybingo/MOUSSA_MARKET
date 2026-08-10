@@ -71,5 +71,20 @@
   "admin_no_inquiries": "Hakuna maombi bado.",
   "common_loading": "Inapakia...",
   "common_close": "Funga",
-  "common_required": "Sehemu hii inahitajika."
+  "common_required": "Sehemu hii inahitajika.",
+  "nav_signup": "Jisajili",
+  "login_forgot_link": "Umesahau nenosiri?",
+  "login_reset_email_label": "Weka barua pepe yako",
+  "login_reset_send": "Tuma kiungo cha kuweka upya",
+  "login_reset_success": "Angalia barua pepe yako kwa kiungo cha kuweka upya nenosiri.",
+  "login_reset_error": "Imeshindikana kutuma barua pepe. Angalia anwani na ujaribu tena.",
+  "login_reset_invalid_email": "Weka anwani sahihi ya barua pepe.",
+  "signup_confirm_password": "Thibitisha nenosiri",
+  "signup_password_mismatch": "Manenosiri hayafanani.",
+  "admin_product_image_label": "Picha ya bidhaa",
+  "admin_image_hint_edit": "Acha wazi kuweka picha ya sasa",
+  "admin_image_invalid_type": "Tafadhali chagua picha (JPG, PNG, au WEBP).",
+  "admin_image_too_large": "Picha lazima iwe chini ya 5MB.",
+  "admin_image_uploading": "Inapakia picha...",
+  "admin_save_error": "Imeshindikana kuhifadhi bidhaa. Tafadhali jaribu tena."
 }

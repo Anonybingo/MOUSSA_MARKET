@@ -71,5 +71,20 @@
   "admin_no_inquiries": "Nta butumwa burahaboneka.",
   "common_loading": "Birimo gupakira...",
   "common_close": "Funga",
-  "common_required": "Aha hakenewe."
+  "common_required": "Aha hakenewe.",
+  "nav_signup": "Iyandikishe",
+  "login_forgot_link": "Wibagiwe ijambo ry'ibanga?",
+  "login_reset_email_label": "Andika imeyili yawe",
+  "login_reset_send": "Ohereza guhindura ijambo ry'ibanga",
+  "login_reset_success": "Reba imeyili yawe uhabone uburyo bwo guhindura ijambo ry'ibanga.",
+  "login_reset_error": "Ntibyakunze kohereza imeyili. Reba imeyili hanyuma wongere ugerageze.",
+  "login_reset_invalid_email": "Andika imeyili nyayo.",
+  "signup_confirm_password": "Emeza ijambo ry'ibanga",
+  "signup_password_mismatch": "Amagambo y'ibanga ntabwo ahuye.",
+  "admin_product_image_label": "Ifoto y'igicuruzwa",
+  "admin_image_hint_edit": "Reka ubusa kugira ngo ubike ifoto isanzwe",
+  "admin_image_invalid_type": "Nyamuneka hitamo ifoto (JPG, PNG, cyangwa WEBP).",
+  "admin_image_too_large": "Ifoto igomba kuba munsi ya 5MB.",
+  "admin_image_uploading": "Kohereza ifoto...",
+  "admin_save_error": "Ntibyakunze kubika igicuruzwa. Ongera ugerageze."
 }

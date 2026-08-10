@@ -52,8 +52,16 @@
           <input type="text" id="p-category" name="category">
         </div>
         <div class="field">
-          <label for="p-image" data-i18n="admin_product_image_url">Image URL</label>
-          <input type="url" id="p-image" name="imageUrl" placeholder="https://...">
+          <label for="p-image-file" data-i18n="admin_product_image_label">Product image</label>
+          <div class="image-upload" id="product-image-upload">
+            <div class="preview" id="product-image-preview"><i class="ti ti-photo" aria-hidden="true"></i></div>
+            <div class="upload-controls">
+              <input type="file" id="p-image-file" accept="image/*">
+              <div class="field-hint hidden" id="product-image-hint" data-i18n="admin_image_hint_edit">Leave empty to keep the current image</div>
+              <div class="field-error" id="product-image-error"></div>
+              <div class="upload-progress-text" data-i18n="admin_image_uploading">Uploading image...</div>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label for="p-description" data-i18n="admin_product_description">Description</label>

@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Deploy with: firebase deploy --only storage
+// (or paste into Firebase console -> Storage -> Rules)
+//
+// This uses a cross-service rule (firestore.get) to check the same
+// users/{uid}.isAdmin flag that firestore.rules checks — so "admin" means
+// the same thing in both places. The first time you deploy a rule that
+// references Firestore from Storage, the Firebase console/CLI will ask you
+// to approve connecting the two services — that's expected, just confirm it.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function underSizeLimit() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Product photos — anyone can view them (they're shown on public
+    // listing pages), only an admin account can upload or replace one.
+    match /products/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && underSizeLimit();
+    }
+  }
+}

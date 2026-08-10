@@ -1,4 +1,4 @@
-import { db } from './firebase-config.js';
+import { db, storage } from './firebase-config.js';
 import {
   collection,
   getDocs,
@@ -10,6 +10,12 @@ import {
   orderBy,
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-storage.js';
 import { requireAuth } from './components.js';
 import { invalidateProductCache } from './products.js';
 import { t } from './i18n.js';
@@ -20,7 +26,43 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function showFieldError(el, text) {
+  if (!el) return;
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
 const STAGES = ['pending', 'responded', 'negotiating', 'closed'];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// currently-selected (not yet uploaded) file for the product form, if any
+let selectedImageFile = null;
+
+function sanitizeFilename(name) {
+  return name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+}
+
+function isStorageUrl(url) {
+  return typeof url === 'string' && url.includes('firebasestorage.googleapis.com');
+}
+
+async function uploadProductImage(file) {
+  const path = `products/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${sanitizeFilename(file.name)}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
+
+// Best-effort cleanup — an old/replaced image failing to delete shouldn't
+// block the admin from saving the product, so this never throws upward.
+async function deleteProductImage(url) {
+  if (!isStorageUrl(url)) return;
+  try {
+    await deleteObject(ref(storage, url));
+  } catch {
+    /* ignore — orphaned file, not worth surfacing an error for */
+  }
+}
 
 export async function initAdmin() {
   const root = document.getElementById('admin-root');
@@ -34,6 +76,7 @@ export async function initAdmin() {
 
   wireTabs();
   wireProductForm();
+  wireImageInput();
   await renderProducts();
   await renderInquiries();
 
@@ -84,7 +127,10 @@ async function renderProducts() {
   mount.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm(`${t('admin_delete')}?`)) return;
+      const target = snap.docs.find((d) => d.id === btn.dataset.delete);
+      const imageUrl = target?.data()?.imageUrl;
       await deleteDoc(doc(db, 'products', btn.dataset.delete));
+      deleteProductImage(imageUrl);
       invalidateProductCache();
       renderProducts();
     });
@@ -102,12 +148,58 @@ function openProductForm(id, existing) {
   const form = document.getElementById('product-form');
   if (!form) return;
   form.dataset.editId = id || '';
+  form.dataset.existingImage = existing?.imageUrl || '';
+  selectedImageFile = null;
+
   form.name.value = existing?.name || '';
   form.price.value = existing?.price || '';
   form.category.value = existing?.category || '';
-  form.imageUrl.value = existing?.imageUrl || '';
   form.description.value = existing?.description || '';
+
+  const fileInput = document.getElementById('p-image-file');
+  if (fileInput) fileInput.value = '';
+
+  const preview = document.getElementById('product-image-preview');
+  if (preview) {
+    preview.innerHTML = existing?.imageUrl
+      ? `<img src="${escapeHtml(existing.imageUrl)}" alt="">`
+      : `<i class="ti ti-photo" aria-hidden="true"></i>`;
+  }
+  const hint = document.getElementById('product-image-hint');
+  hint?.classList.toggle('hidden', !existing?.imageUrl);
+  showFieldError(document.getElementById('product-image-error'), '');
+
   document.getElementById('product-form-panel')?.classList.add('show');
+}
+
+function wireImageInput() {
+  const fileInput = document.getElementById('p-image-file');
+  const preview = document.getElementById('product-image-preview');
+  const errorEl = document.getElementById('product-image-error');
+  if (!fileInput) return;
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    showFieldError(errorEl, '');
+    if (!file) {
+      selectedImageFile = null;
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      showFieldError(errorEl, t('admin_image_invalid_type'));
+      fileInput.value = '';
+      selectedImageFile = null;
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      showFieldError(errorEl, t('admin_image_too_large'));
+      fileInput.value = '';
+      selectedImageFile = null;
+      return;
+    }
+    selectedImageFile = file;
+    if (preview) preview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`;
+  });
 }
 
 function wireProductForm() {
@@ -121,23 +213,46 @@ function wireProductForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = {
-      name: form.name.value.trim(),
-      price: Number(form.price.value),
-      category: form.category.value.trim(),
-      imageUrl: form.imageUrl.value.trim(),
-      description: form.description.value.trim()
-    };
-    const editId = form.dataset.editId;
-    if (editId) {
-      await updateDoc(doc(db, 'products', editId), data);
-    } else {
-      await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() });
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const uploadWrap = document.getElementById('product-image-upload');
+    submitBtn.disabled = true;
+
+    try {
+      let imageUrl = form.dataset.existingImage || '';
+
+      if (selectedImageFile) {
+        uploadWrap?.classList.add('uploading');
+        const oldUrl = imageUrl;
+        imageUrl = await uploadProductImage(selectedImageFile);
+        if (oldUrl && oldUrl !== imageUrl) deleteProductImage(oldUrl);
+      }
+
+      const data = {
+        name: form.name.value.trim(),
+        price: Number(form.price.value),
+        category: form.category.value.trim(),
+        imageUrl,
+        description: form.description.value.trim()
+      };
+
+      const editId = form.dataset.editId;
+      if (editId) {
+        await updateDoc(doc(db, 'products', editId), data);
+      } else {
+        await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() });
+      }
+
+      invalidateProductCache();
+      document.getElementById('product-form-panel')?.classList.remove('show');
+      form.reset();
+      selectedImageFile = null;
+      renderProducts();
+    } catch (err) {
+      showFieldError(document.getElementById('product-image-error'), t('admin_save_error'));
+    } finally {
+      uploadWrap?.classList.remove('uploading');
+      submitBtn.disabled = false;
     }
-    invalidateProductCache();
-    document.getElementById('product-form-panel')?.classList.remove('show');
-    form.reset();
-    renderProducts();
   });
 }
 
