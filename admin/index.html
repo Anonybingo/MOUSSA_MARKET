@@ -39,6 +39,9 @@
         <h3 data-i18n="admin_add_product">Add product</h3>
       </div>
       <form id="product-form">
+        <!-- HIDDEN INPUT TO STORE IMGBB URL FOR ADMIN.JS -->
+        <input type="hidden" id="p-image-url" name="image">
+
         <div class="field">
           <label for="p-name" data-i18n="admin_product_name">Product name</label>
           <input type="text" id="p-name" name="name" required>
@@ -59,7 +62,7 @@
               <input type="file" id="p-image-file" accept="image/*">
               <div class="field-hint hidden" id="product-image-hint" data-i18n="admin_image_hint_edit">Leave empty to keep the current image</div>
               <div class="field-error" id="product-image-error"></div>
-              <div class="upload-progress-text" data-i18n="admin_image_uploading">Uploading image...</div>
+              <div class="upload-progress-text" id="upload-progress" style="display:none;" data-i18n="admin_image_uploading">Uploading image...</div>
             </div>
           </div>
         </div>
@@ -83,5 +86,6 @@
     renderChrome();
     initAdmin();
   </script>
+  <script type="module" src="imgupload.js"></script>
 </body>
 </html>
