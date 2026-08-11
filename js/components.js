@@ -7,6 +7,17 @@ import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase
 import { loadLanguage, initLangSwitcher, currentLang } from './i18n.js';
 
 const HEADER_HTML = `
+<div class="header-decor" aria-hidden="true">
+  <i class="ti ti-shopping-cart" style="top:6%; left:3%; font-size:26px; color:var(--navy); transform:rotate(-18deg);"></i>
+  <i class="ti ti-coin" style="top:58%; left:8%; font-size:19px; color:var(--gold-dark); transform:rotate(14deg);"></i>
+  <i class="ti ti-tag" style="top:10%; left:21%; font-size:17px; color:var(--navy); transform:rotate(26deg);"></i>
+  <i class="ti ti-shopping-bag" style="top:62%; left:31%; font-size:21px; color:var(--navy); transform:rotate(-11deg);"></i>
+  <i class="ti ti-receipt" style="top:8%; left:42%; font-size:17px; color:var(--gold-dark); transform:rotate(-8deg);"></i>
+  <i class="ti ti-credit-card" style="top:12%; right:23%; font-size:20px; color:var(--navy); transform:rotate(15deg);"></i>
+  <i class="ti ti-gift" style="top:60%; right:12%; font-size:21px; color:var(--navy); transform:rotate(-16deg);"></i>
+  <i class="ti ti-truck-delivery" style="top:14%; right:4%; font-size:24px; color:var(--gold-dark); transform:rotate(9deg);"></i>
+  <i class="ti ti-coin" style="top:60%; right:35%; font-size:15px; color:var(--navy); transform:rotate(-22deg);"></i>
+</div>
 <div class="glass-bar">
   <div class="container">
     <a href="/" class="site-logo">Market<span>place</span></a>

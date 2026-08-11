@@ -86,5 +86,6 @@
   "admin_image_invalid_type": "Nyamuneka hitamo ifoto (JPG, PNG, cyangwa WEBP).",
   "admin_image_too_large": "Ifoto igomba kuba munsi ya 5MB.",
   "admin_image_uploading": "Kohereza ifoto...",
-  "admin_save_error": "Ntibyakunze kubika igicuruzwa. Ongera ugerageze."
+  "admin_save_error": "Ntibyakunze kubika igicuruzwa. Ongera ugerageze.",
+  "admin_image_upload_failed": "Ntibyakunze kohereza ifoto. Ongera ugerageze."
 }

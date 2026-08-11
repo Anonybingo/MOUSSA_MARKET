@@ -86,5 +86,6 @@
   "admin_image_invalid_type": "Tafadhali chagua picha (JPG, PNG, au WEBP).",
   "admin_image_too_large": "Picha lazima iwe chini ya 5MB.",
   "admin_image_uploading": "Inapakia picha...",
-  "admin_save_error": "Imeshindikana kuhifadhi bidhaa. Tafadhali jaribu tena."
+  "admin_save_error": "Imeshindikana kuhifadhi bidhaa. Tafadhali jaribu tena.",
+  "admin_image_upload_failed": "Imeshindikana kupakia picha. Tafadhali jaribu tena."
 }

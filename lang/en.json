@@ -86,5 +86,6 @@
   "admin_image_invalid_type": "Please choose an image file (JPG, PNG, or WEBP).",
   "admin_image_too_large": "Image must be under 5MB.",
   "admin_image_uploading": "Uploading image...",
-  "admin_save_error": "Couldn't save the product. Please try again."
+  "admin_save_error": "Couldn't save the product. Please try again.",
+  "admin_image_upload_failed": "Couldn't upload the image. Please try again."
 }

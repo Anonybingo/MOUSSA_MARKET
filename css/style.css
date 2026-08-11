@@ -88,30 +88,46 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   position: sticky;
   top: 0;
   z-index: 200;
-  padding: 14px 16px 0;
+  padding: 30px 16px 44px;
+  overflow: visible;
+}
+
+/* decorative marketplace icons scattered behind/around the glass bar */
+.header-decor {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.header-decor i {
+  position: absolute;
+  opacity: 0.16;
 }
 
 .glass-bar {
+  position: relative;
+  z-index: 1;
   max-width: var(--max-width);
   margin: 0 auto;
-  background: rgba(var(--navy-rgb), 0.62);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(20, 22, 28, 0.6);
+  backdrop-filter: blur(34px) saturate(140%);
+  -webkit-backdrop-filter: blur(34px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 18px;
-  box-shadow: 0 8px 30px rgba(var(--navy-dark-rgb), 0.22);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.14);
   transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* slightly denser glass once the page has scrolled, for legibility over content */
 .site-header.scrolled .glass-bar {
-  background: rgba(var(--navy-dark-rgb), 0.82);
-  box-shadow: 0 10px 34px rgba(var(--navy-dark-rgb), 0.3);
+  background: rgba(14, 16, 21, 0.8);
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.2);
 }
 
 /* graceful fallback for browsers without backdrop-filter support */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-bar { background: rgba(var(--navy-rgb), 0.96); }
+  .glass-bar { background: rgba(20, 22, 28, 0.94); }
 }
 
 .site-header .container {
@@ -129,6 +145,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   font-weight: 600;
   font-size: 19px;
   color: #FFFFFF;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   white-space: nowrap;
 }
 
@@ -171,6 +188,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   color: var(--navy-text);
   font-size: 14px;
   font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: color 0.15s ease;
 }
 
@@ -190,9 +208,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .lang-switch select {
   appearance: none;
-  background: rgba(255, 255, 255, 0.06);
-  border: 0.5px solid #3A4E70;
-  color: var(--navy-text);
+  background: rgba(255, 255, 255, 0.12);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
   font-size: 12px;
   padding: 6px 26px 6px 10px;
   border-radius: 6px;
@@ -206,8 +224,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   top: 50%;
   width: 6px;
   height: 6px;
-  border-right: 1.5px solid var(--navy-text);
-  border-bottom: 1.5px solid var(--navy-text);
+  border-right: 1.5px solid #FFFFFF;
+  border-bottom: 1.5px solid #FFFFFF;
   transform: translateY(-70%) rotate(45deg);
   pointer-events: none;
 }
@@ -218,6 +236,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   display: flex;
   align-items: center;
   gap: 10px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .user-chip .user-name-link { color: #FFFFFF; font-weight: 500; }
@@ -233,10 +252,10 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
     top: calc(100% + 10px);
     left: 0;
     right: 0;
-    background: rgba(var(--navy-dark-rgb), 0.88);
-    backdrop-filter: blur(22px) saturate(160%);
-    -webkit-backdrop-filter: blur(22px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(14, 16, 21, 0.7);
+    backdrop-filter: blur(36px) saturate(140%);
+    -webkit-backdrop-filter: blur(36px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 16px;
     flex-direction: column;
     align-items: stretch;
@@ -335,9 +354,31 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
    ========================================================================== */
 
 .hero {
-  padding: 56px 0 40px;
+  position: relative;
+  overflow: hidden;
+  min-height: 86vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
   text-align: center;
 }
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(circle at 15% 20%, rgba(217, 164, 65, 0.28), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(47, 93, 158, 0.24), transparent 50%),
+    linear-gradient(160deg, #152A4A 0%, #1c3a63 55%, #2f5d9e 100%);
+}
+
+.hero .container { width: 100%; }
+.hero h1, .hero p, .hero .eyebrow { color: #FFFFFF; }
+.hero p { color: rgba(255, 255, 255, 0.75); }
 
 .hero h1 {
   font-size: 32px;
@@ -345,7 +386,6 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .hero p {
-  color: var(--text-secondary);
   font-size: 16px;
   margin-bottom: 26px;
 }
@@ -417,6 +457,19 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 18px;
+}
+
+/* scroll-reveal — added to product cards via JS (products.js) as they render;
+   IntersectionObserver adds .in-view once each card scrolls into sight */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .product-card {

@@ -19,7 +19,7 @@ function productCardHTML(id, p) {
     ? `<img src="${escapeHtml(p.imageUrl)}" alt="${name}">`
     : `<i class="ti ti-photo" aria-hidden="true"></i>`;
   return `
-    <a href="/product/?id=${encodeURIComponent(id)}" class="product-card">
+    <a href="/product/?id=${encodeURIComponent(id)}" class="product-card reveal">
       <div class="thumb">${thumb}</div>
       <div class="body">
         <span class="category">${category}</span>
@@ -32,6 +32,36 @@ function productCardHTML(id, p) {
 
 function emptyStateHTML() {
   return `<div class="empty-state"><i class="ti ti-package" aria-hidden="true"></i><p>${t('browse_no_results')}</p></div>`;
+}
+
+// Fades + slides each card in, one after another, as it scrolls into view.
+// Re-observing on every render is intentional: it makes the effect replay
+// after a search/filter change swaps in a new set of cards.
+function activateReveal(mount) {
+  const cards = mount.querySelectorAll('.reveal');
+  if (!cards.length) return;
+
+  if (!('IntersectionObserver' in window)) {
+    cards.forEach((el) => el.classList.add('in-view'));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+  );
+
+  cards.forEach((el, i) => {
+    el.style.transitionDelay = `${Math.min(i * 70, 350)}ms`;
+    observer.observe(el);
+  });
 }
 
 let cache = null;
@@ -53,6 +83,7 @@ export async function renderFeatured(mountId, count = 3) {
   const products = await fetchAllProducts();
   const list = products.slice(0, count);
   mount.innerHTML = list.length ? list.map((p) => productCardHTML(p.id, p)).join('') : emptyStateHTML();
+  activateReveal(mount);
 }
 
 export async function renderProductGrid(mountId, { search = '', category = '' } = {}) {
@@ -69,6 +100,7 @@ export async function renderProductGrid(mountId, { search = '', category = '' } 
   }
 
   mount.innerHTML = products.length ? products.map((p) => productCardHTML(p.id, p)).join('') : emptyStateHTML();
+  activateReveal(mount);
 }
 
 export async function populateCategoryFilter(selectId) {

@@ -28,7 +28,8 @@ js/components.js     Shared header/footer + auth-aware nav
 js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
 
 firestore.rules       Firestore security rules — deploy these, see below
-storage.rules        Storage security rules (product images) — deploy these too
+storage.rules        Storage rules — not deployed/needed right now, see below
+admin/imgupload.js    Product image upload to imgbb (used instead of Storage)
 ```
 
 Every internal link, redirect, and asset reference uses root-absolute
@@ -54,13 +55,13 @@ is what actually enforces: anyone can browse products, only an admin
 account can add/edit/delete products, and a user can only ever see their
 own inquiries.
 
-**5. Enable Storage and deploy its rules** — Build → Storage → Get
-started (default bucket is fine). Then copy `storage.rules` into
-Storage → Rules and publish. This is what enforces: anyone can view
-product photos, only an admin account can upload or replace one. The
-first time you publish a rule that references Firestore from Storage
-(this one does, to check `isAdmin`), the console will ask you to approve
-connecting the two services — that's expected, confirm it.
+**5. (Optional, not currently used) Storage** — Cloud Storage for Firebase
+now requires the pay-as-you-go **Blaze** plan just to turn on, even to stay
+within its free-tier usage. Rather than require that, product images
+upload to **imgbb** instead (free, no plan upgrade) — see the note under
+"What's built" below. `storage.rules` is still in this project and ready
+to deploy if you ever do move to Blaze and want to switch to Storage
+later; it's not required for the site to work today.
 
 **6. Register a web app** — Project settings (gear icon) → General → Your
 apps → Add app → Web. Copy the `firebaseConfig` object it gives you into
@@ -99,7 +100,7 @@ themselves admin through the app itself.) Log out and back in, and the
 "Admin" link appears in the nav.
 
 **10. Add your first products** from the Admin page → Products tab → Add
-product — pick an image file directly, it uploads to Storage for you.
+product — pick an image file directly, it uploads to imgbb for you.
 
 **11. Deploy** — easiest is Firebase Hosting (`firebase init hosting`, then
 `firebase deploy`), same as you'd set up for HEALTH.
@@ -117,9 +118,31 @@ Built in this pass, on top of the original marketplace:
 - **Login**: password show/hide toggle, "Forgot password?" using
   Firebase's real reset-email flow, App Check (reCAPTCHA v3) protection.
 - **Signup**: password + confirm-password toggles and matching validation.
-- **Admin product images**: real file upload to Firebase Storage with a
-  preview, type/size validation, and cleanup of the old file when an image
-  is replaced or a product is deleted — no more pasting URLs.
+- **Admin product images**: real file upload with a live preview and
+  type/size validation. Uploads go to **imgbb** rather than Firebase
+  Storage (`admin/imgupload.js`) — Storage now requires the Blaze plan
+  even for free-tier usage, so this avoids that entirely. Worth knowing:
+  - The imgbb API key lives in that file in plain view, which is
+    unavoidable without adding a backend to proxy the request through —
+    imgbb doesn't offer a way to restrict a key to specific domains the
+    way some other services do. It's a free key with no billing attached,
+    so the realistic risk is someone else using it to upload images
+    through your account, not a cost risk. If that ever happens, regenerate
+    the key on imgbb and swap it into `imgupload.js`.
+  - Replacing or deleting a product doesn't clean up its old imgbb image
+    the way the earlier Storage version would have. Not a cost concern on
+    imgbb's free tier, just an orphaned file — not worth the added
+    complexity to chase down for now.
+- **Visual polish pass**: navbar glass retinted for reliable text contrast
+  in any lighting (text-shadow added as extra insurance, since the glass
+  is intentionally quite see-through) · decorative marketplace icons
+  (cart, coins, tag, bag, receipt, card, gift, truck) scattered behind
+  the header at low opacity (`.header-decor` in `components.js`/CSS) ·
+  hero enlarged to ~86vh with a navy/gold gradient so there's something
+  for the glass to visibly show through on first load · product cards
+  fade/slide in one at a time as they scroll into view (`.reveal` class,
+  `activateReveal()` in `products.js`, replays on every search/filter
+  change) — skips automatically for anyone with reduced-motion set.
 
 Not built yet — flagging clearly rather than shipping something half-done:
 
@@ -131,10 +154,12 @@ Not built yet — flagging clearly rather than shipping something half-done:
   collection, real-time listeners, an admin-side conversation view) that
   it deserves its own pass rather than being rushed in alongside
   everything above.
-- **Profile Settings** (`/profile/`) — profile picture upload, username
-  change, password change with re-authentication. Also next.
-- Once those exist, `firestore.rules` and `storage.rules` need another
-  pass to cover the new chat-messages collection and profile pictures.
+- **Profile Settings** (`/profile/`) — profile picture upload (via imgbb,
+  same as product images), username change, password change with
+  re-authentication. Also next.
+- Once that exists, `firestore.rules` needs another pass to cover the new
+  chat-messages collection. `storage.rules` stays dormant unless you move
+  to Blaze and switch images over to Storage later.
 - A full responsive/QA sweep across every page is worth doing once, at
   the end, rather than piecemeal after each feature.
 
