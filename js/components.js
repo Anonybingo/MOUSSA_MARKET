@@ -5,18 +5,19 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { loadLanguage, initLangSwitcher, currentLang } from './i18n.js';
+import { openContactModal } from './contact.js';
 
 const HEADER_HTML = `
 <div class="header-decor" aria-hidden="true">
-  <i class="ti ti-shopping-cart" style="top:6%; left:3%; font-size:26px; color:var(--navy); transform:rotate(-18deg);"></i>
-  <i class="ti ti-coin" style="top:58%; left:8%; font-size:19px; color:var(--gold-dark); transform:rotate(14deg);"></i>
-  <i class="ti ti-tag" style="top:10%; left:21%; font-size:17px; color:var(--navy); transform:rotate(26deg);"></i>
-  <i class="ti ti-shopping-bag" style="top:62%; left:31%; font-size:21px; color:var(--navy); transform:rotate(-11deg);"></i>
-  <i class="ti ti-receipt" style="top:8%; left:42%; font-size:17px; color:var(--gold-dark); transform:rotate(-8deg);"></i>
-  <i class="ti ti-credit-card" style="top:12%; right:23%; font-size:20px; color:var(--navy); transform:rotate(15deg);"></i>
-  <i class="ti ti-gift" style="top:60%; right:12%; font-size:21px; color:var(--navy); transform:rotate(-16deg);"></i>
-  <i class="ti ti-truck-delivery" style="top:14%; right:4%; font-size:24px; color:var(--gold-dark); transform:rotate(9deg);"></i>
-  <i class="ti ti-coin" style="top:60%; right:35%; font-size:15px; color:var(--navy); transform:rotate(-22deg);"></i>
+  <i class="ti ti-shopping-cart" style="top:6%; left:3%; font-size:29px; color:var(--navy); --r:-18deg; animation-duration:9s; animation-delay:-2.1s;"></i>
+  <i class="ti ti-coin" style="top:58%; left:8%; font-size:22px; color:var(--gold-dark); --r:14deg; animation-duration:7.5s; animation-delay:-4.6s;"></i>
+  <i class="ti ti-tag" style="top:10%; left:21%; font-size:19px; color:var(--navy); --r:26deg; animation-duration:10s; animation-delay:-0.8s;"></i>
+  <i class="ti ti-shopping-bag" style="top:62%; left:31%; font-size:24px; color:var(--navy); --r:-11deg; animation-duration:8.2s; animation-delay:-3.4s;"></i>
+  <i class="ti ti-receipt" style="top:8%; left:42%; font-size:19px; color:var(--gold-dark); --r:-8deg; animation-duration:9.6s; animation-delay:-5.2s;"></i>
+  <i class="ti ti-credit-card" style="top:12%; right:23%; font-size:23px; color:var(--navy); --r:15deg; animation-duration:7.8s; animation-delay:-1.5s;"></i>
+  <i class="ti ti-gift" style="top:60%; right:12%; font-size:24px; color:var(--navy); --r:-16deg; animation-duration:8.6s; animation-delay:-4s;"></i>
+  <i class="ti ti-truck-delivery" style="top:14%; right:4%; font-size:27px; color:var(--gold-dark); --r:9deg; animation-duration:10.4s; animation-delay:-2.8s;"></i>
+  <i class="ti ti-coin" style="top:60%; right:35%; font-size:18px; color:var(--navy); --r:-22deg; animation-duration:6.8s; animation-delay:-3.9s;"></i>
 </div>
 <div class="glass-bar">
   <div class="container">
@@ -31,6 +32,7 @@ const HEADER_HTML = `
         <a href="/" data-i18n="nav_home">Home</a>
         <a href="/products/" data-i18n="nav_products">Products</a>
         <a href="/about/" data-i18n="nav_about">About</a>
+        <a href="#" id="nav-contact" data-i18n="nav_contact">Contact us</a>
         <a href="/dashboard/" id="nav-dashboard" class="hidden" data-i18n="nav_dashboard">My inquiries</a>
         <a href="/admin/" id="nav-admin" class="hidden" data-i18n="nav_admin">Admin</a>
       </nav>
@@ -85,6 +87,15 @@ export async function renderChrome() {
   watchAuthState();
   wireMobileMenu();
   wireScrollEffect();
+  wireContactLink();
+}
+
+function wireContactLink() {
+  const link = document.getElementById('nav-contact');
+  link?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openContactModal();
+  });
 }
 
 function wireMobileMenu() {

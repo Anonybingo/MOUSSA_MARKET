@@ -1,7 +1,7 @@
-import { db, auth } from './firebase-config.js';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js';
+import { db } from './firebase-config.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { t } from './i18n.js';
+import { openContactModal } from './contact.js';
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -18,7 +18,6 @@ function getProductId() {
 }
 
 let currentProduct = null;
-let currentUser = null;
 
 export async function initProductDetail() {
   const id = getProductId();
@@ -37,17 +36,8 @@ export async function initProductDetail() {
   }
   currentProduct = { id: snap.id, ...snap.data() };
   renderProduct();
-  wireModal();
 
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    updateContactButton();
-  });
-
-  document.addEventListener('translations-ready', () => {
-    renderProduct();
-    wireModal();
-  });
+  document.addEventListener('translations-ready', renderProduct);
 }
 
 function renderProduct() {
@@ -69,59 +59,7 @@ function renderProduct() {
       <button id="contact-btn" class="btn btn-gold">${t('product_contact_btn')}</button>
     </div>
   `;
-  document.getElementById('contact-btn')?.addEventListener('click', onContactClick);
-  updateContactButton();
-}
-
-function updateContactButton() {
-  const btn = document.getElementById('contact-btn');
-  if (!btn) return;
-  btn.textContent = currentUser ? t('product_contact_btn') : t('product_login_to_contact');
-}
-
-function onContactClick() {
-  if (!currentUser) {
-    const redirect = encodeURIComponent(`/product/?id=${currentProduct.id}`);
-    window.location.href = `/login/?redirect=${redirect}`;
-    return;
-  }
-  const overlay = document.getElementById('contact-modal');
-  overlay?.classList.add('show');
-}
-
-function wireModal() {
-  const overlay = document.getElementById('contact-modal');
-  if (!overlay) return;
-
-  document.getElementById('modal-close')?.addEventListener('click', () => overlay.classList.remove('show'));
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.classList.remove('show');
-  });
-
-  const form = document.getElementById('contact-form');
-  if (!form || form.dataset.wired) return;
-  form.dataset.wired = 'true';
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      await addDoc(collection(db, 'inquiries'), {
-        productId: currentProduct.id,
-        productName: currentProduct.name,
-        productImage: currentProduct.imageUrl || '',
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        userName: currentUser.displayName || currentUser.email,
-        message: form.message.value.trim(),
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
-      const modal = overlay.querySelector('.modal');
-      if (modal) modal.innerHTML = `<p style="padding:8px 0 4px;">${t('contact_modal_success')}</p>`;
-    } catch {
-      submitBtn.disabled = false;
-    }
+  document.getElementById('contact-btn')?.addEventListener('click', () => {
+    openContactModal({ id: p.id, name: p.name, image: p.imageUrl || '' });
   });
 }

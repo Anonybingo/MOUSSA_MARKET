@@ -137,29 +137,44 @@ Built in this pass, on top of the original marketplace:
   in any lighting (text-shadow added as extra insurance, since the glass
   is intentionally quite see-through) · decorative marketplace icons
   (cart, coins, tag, bag, receipt, card, gift, truck) scattered behind
-  the header at low opacity (`.header-decor` in `components.js`/CSS) ·
-  hero enlarged to ~86vh with a navy/gold gradient so there's something
-  for the glass to visibly show through on first load · product cards
-  fade/slide in one at a time as they scroll into view (`.reveal` class,
-  `activateReveal()` in `products.js`, replays on every search/filter
-  change) — skips automatically for anyone with reduced-motion set.
+  the header, bold and drifting on an ambient float animation
+  (`.header-decor` in `components.js`/CSS) · hero enlarged to ~86vh with
+  a navy/gold gradient that fades to white at the top edge (into the
+  header zone) so there's something for the glass to visibly show
+  through on first load · product cards and the "Featured products"
+  heading fade/slide in as they scroll into view **and back out again**
+  scrolling the other way — a real bidirectional toggle, not a one-shot
+  animation (`.reveal` class, `activateReveal()` in `products.js`) ·
+  a reusable full-screen **loader** with the same falling icons and a
+  center spinner (`js/loader.js` — `showLoader()`/`hideLoader()`, not
+  wired into anything by default, drop it in wherever there's a wait).
+  All of the above skips automatically for anyone with reduced-motion set.
+- **Contact Us — three options, on both sides.** Clicking "Contact us"
+  (now in the nav on every page, and still on each product page with
+  that product attached) opens one shared modal (`js/contact.js`) with:
+  - **Send a Message** — the original per-product inquiry form, now
+    generalized to work with or without product context, plus an
+    optional phone number field. Requires sign-in, same as before.
+  - **Web Chat** — real, live, two-way. `js/chat.js` holds the shared
+    Firestore logic (`conversations/{uid}/messages` subcollection,
+    `onSnapshot` listeners); `/chat/` is the user-facing thread; the
+    Admin page's new **Chat** tab lists every conversation and lets you
+    reply to any of them — both sides update in real time, no refresh.
+  - **WhatsApp** — opens `wa.me` with a pre-filled message (mentions the
+    product if there is one). **Set your number first**: `WHATSAPP_NUMBER`
+    in `js/firebase-config.js` is still a placeholder — digits only,
+    country code, no `+`, e.g. a Rwanda number would look like
+    `"2507XXXXXXXX"`.
+  
+  `firestore.rules` now covers `conversations` and its `messages`
+  subcollection: a user can only ever read/write their own conversation
+  (keyed by their own uid), admins can read/write any of them.
 
 Not built yet — flagging clearly rather than shipping something half-done:
 
-- **Contact Us (Inquiry / Web Chat / WhatsApp) as a single menu.** Right
-  now the existing per-product inquiry flow (`product.html` → "Contact
-  us") still works as before. The 3-option menu, the general-purpose
-  inquiry form, the real-time web chat, and the WhatsApp deep link are
-  next — web chat in particular is a big enough feature (a new Firestore
-  collection, real-time listeners, an admin-side conversation view) that
-  it deserves its own pass rather than being rushed in alongside
-  everything above.
 - **Profile Settings** (`/profile/`) — profile picture upload (via imgbb,
   same as product images), username change, password change with
-  re-authentication. Also next.
-- Once that exists, `firestore.rules` needs another pass to cover the new
-  chat-messages collection. `storage.rules` stays dormant unless you move
-  to Blaze and switch images over to Storage later.
+  re-authentication.
 - A full responsive/QA sweep across every page is worth doing once, at
   the end, rather than piecemeal after each feature.
 

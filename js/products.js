@@ -34,10 +34,10 @@ function emptyStateHTML() {
   return `<div class="empty-state"><i class="ti ti-package" aria-hidden="true"></i><p>${t('browse_no_results')}</p></div>`;
 }
 
-// Fades + slides each card in, one after another, as it scrolls into view.
-// Re-observing on every render is intentional: it makes the effect replay
-// after a search/filter change swaps in a new set of cards.
-function activateReveal(mount) {
+// Fades + slides each element in as it scrolls into view, and back out again
+// if scrolled past the other way — exported so it can also drive the
+// "Featured products" heading right at the hero boundary, not just cards.
+export function activateReveal(mount) {
   const cards = mount.querySelectorAll('.reveal');
   if (!cards.length) return;
 
@@ -49,17 +49,14 @@ function activateReveal(mount) {
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('in-view');
-          observer.unobserve(entry.target);
-        }
+        entry.target.classList.toggle('in-view', entry.isIntersecting);
       });
     },
-    { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    { threshold: 0.15 }
   );
 
   cards.forEach((el, i) => {
-    el.style.transitionDelay = `${Math.min(i * 70, 350)}ms`;
+    el.style.transitionDelay = `${Math.min(i * 150, 600)}ms`;
     observer.observe(el);
   });
 }

@@ -17,6 +17,7 @@
       <div class="tabs" style="margin-top:20px;">
         <button class="active" data-tab="tab-products" data-i18n="admin_tab_products">Products</button>
         <button data-tab="tab-inquiries" data-i18n="admin_tab_inquiries">Inquiries</button>
+        <button data-tab="tab-chat" data-i18n="admin_tab_chat">Chat</button>
       </div>
 
       <div id="tab-products" class="tab-panel">
@@ -29,6 +30,20 @@
 
       <div id="tab-inquiries" class="tab-panel hidden">
         <div id="admin-inquiries-list"></div>
+      </div>
+
+      <div id="tab-chat" class="tab-panel hidden">
+        <div class="admin-chat-shell">
+          <div class="admin-chat-list" id="admin-chat-list"></div>
+          <div class="admin-chat-thread" id="admin-chat-thread">
+            <p class="chat-empty" id="admin-chat-placeholder" data-i18n="admin_chat_select_prompt">Select a conversation to view messages.</p>
+            <div class="chat-messages hidden" id="admin-chat-messages"></div>
+            <form class="chat-input-row hidden" id="admin-chat-form">
+              <input type="text" id="admin-chat-input" data-i18n-placeholder="admin_chat_reply_placeholder" placeholder="Type a reply...">
+              <button type="submit" class="btn btn-gold" data-i18n="chat_send">Send</button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   </section>

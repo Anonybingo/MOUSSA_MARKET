@@ -24,7 +24,7 @@
 
   <section class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head reveal">
         <h2 data-i18n="featured_title">Featured products</h2>
         <a href="/products/" data-i18n="featured_viewall">View all</a>
       </div>
@@ -36,10 +36,16 @@
 
   <script type="module">
     import { renderChrome } from '/js/components.js';
-    import { renderFeatured } from '/js/products.js';
+    import { renderFeatured, activateReveal } from '/js/products.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
 
-    document.addEventListener('translations-ready', () => renderFeatured('featured-grid', 3));
+    document.addEventListener('translations-ready', async () => {
+      showLoader();
+      await renderFeatured('featured-grid', 3);
+      hideLoader();
+    });
     renderChrome();
+    activateReveal(document.querySelector('.section'));
   </script>
 </body>
 </html>

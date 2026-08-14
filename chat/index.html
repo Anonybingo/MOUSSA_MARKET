@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat — Marketplace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section" style="padding-top:24px;">
+    <div class="container" style="max-width:720px;">
+      <div class="chat-shell">
+        <div class="chat-shell-head">
+          <h1 data-i18n="chat_title">Chat with us</h1>
+          <p data-i18n="chat_subtitle">Messages go straight to our team.</p>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <form class="chat-input-row" id="chat-form">
+          <input type="text" id="chat-input" data-i18n-placeholder="chat_input_placeholder" placeholder="Type a message...">
+          <button type="submit" class="btn btn-gold" data-i18n="chat_send">Send</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { renderChrome } from '/js/components.js';
+    import { initUserChat } from '/js/chat.js';
+    renderChrome();
+    initUserChat();
+  </script>
+</body>
+</html>

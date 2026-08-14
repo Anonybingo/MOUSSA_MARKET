@@ -12,6 +12,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { requireAuth } from './components.js';
 import { invalidateProductCache } from './products.js';
+import { listenToConversations, listenToMessages, sendMessage, messageBubbleHTML } from './chat.js';
 import { t } from './i18n.js';
 
 function escapeHtml(str) {
@@ -36,6 +37,7 @@ export async function initAdmin() {
 
   wireTabs();
   wireProductForm();
+  initAdminChat();
   await renderProducts();
   await renderInquiries();
 
@@ -213,5 +215,63 @@ async function renderInquiries() {
     sel.addEventListener('change', async () => {
       await updateDoc(doc(db, 'inquiries', sel.dataset.status), { status: sel.value });
     });
+  });
+}
+
+/* ---------------- Chat ---------------- */
+
+function initAdminChat() {
+  const listEl = document.getElementById('admin-chat-list');
+  const placeholder = document.getElementById('admin-chat-placeholder');
+  const messagesEl = document.getElementById('admin-chat-messages');
+  const form = document.getElementById('admin-chat-form');
+  const input = document.getElementById('admin-chat-input');
+  if (!listEl || !form) return;
+
+  let activeConvId = null;
+  let unsubscribeMessages = null;
+
+  listenToConversations((conversations) => {
+    listEl.innerHTML = conversations.length
+      ? conversations
+          .map(
+            (c) => `
+        <button type="button" class="admin-chat-item ${c.id === activeConvId ? 'active' : ''}" data-conv="${c.id}">
+          <span class="admin-chat-item-name">${escapeHtml(c.userName || c.userEmail || c.id)}</span>
+          <span class="admin-chat-item-preview">${escapeHtml(c.lastMessage || '')}</span>
+        </button>`
+          )
+          .join('')
+      : `<p class="chat-empty">${t('admin_chat_no_conversations')}</p>`;
+
+    listEl.querySelectorAll('[data-conv]').forEach((btn) => {
+      btn.addEventListener('click', () => selectConversation(btn.dataset.conv));
+    });
+  });
+
+  function selectConversation(convId) {
+    activeConvId = convId;
+    listEl.querySelectorAll('.admin-chat-item').forEach((el) => {
+      el.classList.toggle('active', el.dataset.conv === convId);
+    });
+
+    placeholder?.classList.add('hidden');
+    messagesEl?.classList.remove('hidden');
+    form.classList.remove('hidden');
+
+    if (unsubscribeMessages) unsubscribeMessages();
+    unsubscribeMessages = listenToMessages(convId, (messages) => {
+      messagesEl.innerHTML = messages.map((m) => messageBubbleHTML(m, 'admin')).join('');
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!activeConvId || !input) return;
+    const text = input.value;
+    if (!text.trim()) return;
+    input.value = '';
+    await sendMessage(activeConvId, 'admin', text);
   });
 }

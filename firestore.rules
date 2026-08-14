@@ -47,5 +47,25 @@ service cloud.firestore {
         && (resource.data.userId == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }
+
+    // ---- conversations (web chat) ----
+    // One conversation doc per user, keyed by their own uid — that's what
+    // lets the rule check "is this your conversation" with a simple id
+    // comparison instead of a stored field. Messages live in a subcollection
+    // so the user's own messages and the admin's replies share one thread.
+    match /conversations/{convId} {
+      allow read, create, update: if isSignedIn()
+        && (request.auth.uid == convId || isAdmin());
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn()
+          && (request.auth.uid == convId || isAdmin());
+        allow create: if isSignedIn()
+          && ((request.auth.uid == convId && request.resource.data.sender == 'user')
+              || (isAdmin() && request.resource.data.sender == 'admin'));
+        allow update, delete: if false;
+      }
+    }
   }
 }
