@@ -31,8 +31,11 @@
   <script type="module">
     import { renderChrome } from '/js/components.js';
     import { initUserChat } from '/js/chat.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
     renderChrome();
-    initUserChat();
+    initUserChat().finally(() => hideLoader());
   </script>
 </body>
 </html>

@@ -52,7 +52,7 @@ function build() {
   center.className = 'loader-center';
   center.innerHTML = `
     <div class="loader-spinner"></div>
-    <p class="loader-text">${t('common_loading')}</p>
+    <p class="loader-text">${t('LOADING')}</p>
   `;
 
   overlay.appendChild(iconsWrap);
@@ -63,7 +63,7 @@ function build() {
 export function showLoader(message) {
   build();
   const textEl = overlay.querySelector('.loader-text');
-  if (textEl) textEl.textContent = message || t('common_loading');
+  if (textEl) textEl.textContent = message || t('LOADING');
   overlay.classList.add('show');
   document.body.style.overflow = 'hidden';
 }

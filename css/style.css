@@ -55,6 +55,9 @@ body {
   color: var(--text-primary);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4 {
@@ -892,7 +895,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .site-footer {
   background: var(--navy-dark);
   color: var(--navy-text);
-  margin-top: 60px;
+  margin-top: auto;
   padding: 32px 0;
   font-size: 13px;
 }

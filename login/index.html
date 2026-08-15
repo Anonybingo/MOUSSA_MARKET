@@ -60,7 +60,10 @@
   <script type="module">
     import { renderChrome } from '/js/components.js';
     import { initLoginForm, initPasswordToggles, initForgotPassword } from '/js/auth.js';
-    renderChrome();
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
+    renderChrome().finally(() => hideLoader());
     initLoginForm();
     initPasswordToggles();
     initForgotPassword();

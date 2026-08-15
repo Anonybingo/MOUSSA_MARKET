@@ -24,8 +24,11 @@
   <script type="module">
     import { renderChrome } from '/js/components.js';
     import { initDashboard } from '/js/dashboard.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
     renderChrome();
-    initDashboard();
+    initDashboard().finally(() => hideLoader());
   </script>
 </body>
 </html>

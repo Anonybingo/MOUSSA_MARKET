@@ -34,7 +34,10 @@
 
   <script type="module">
     import { renderChrome } from '/js/components.js';
-    renderChrome();
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
+    renderChrome().finally(() => hideLoader());
   </script>
 </body>
 </html>

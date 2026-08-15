@@ -36,6 +36,7 @@
   <script type="module">
     import { renderChrome } from '/js/components.js';
     import { renderProductGrid, populateCategoryFilter } from '/js/products.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
 
     const searchInput = document.getElementById('search-input');
     const categoryFilter = document.getElementById('category-filter');
@@ -53,7 +54,11 @@
       await renderProductGrid('product-grid', currentFilters());
     }
 
-    document.addEventListener('translations-ready', refresh);
+    document.addEventListener('translations-ready', async () => {
+      showLoader();
+      await refresh();
+      hideLoader();
+    });
     renderChrome();
 
     searchInput.addEventListener('input', () => renderProductGrid('product-grid', currentFilters()));

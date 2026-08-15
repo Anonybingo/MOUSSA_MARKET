@@ -98,8 +98,11 @@
   <script type="module">
     import { renderChrome } from '/js/components.js';
     import { initAdmin } from '/js/admin.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
     renderChrome();
-    initAdmin();
+    initAdmin().finally(() => hideLoader());
   </script>
   <script type="module" src="/admin/imgupload.js"></script>
 </body>
