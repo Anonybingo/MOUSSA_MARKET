@@ -2,15 +2,12 @@ import { db } from './firebase-config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { t } from './i18n.js';
 import { openContactModal } from './contact.js';
+import { updatePriceDisplays } from './currency.js';
 
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
   return div.innerHTML;
-}
-
-function formatPrice(price) {
-  return `${new Intl.NumberFormat('en-RW').format(price || 0)} RWF`;
 }
 
 function getProductId() {
@@ -38,6 +35,7 @@ export async function initProductDetail() {
   renderProduct();
 
   document.addEventListener('translations-ready', renderProduct);
+  document.addEventListener('currency-changed', () => updatePriceDisplays(mount));
 }
 
 function renderProduct() {
@@ -54,11 +52,12 @@ function renderProduct() {
     <div>
       <span class="category">${escapeHtml(p.category || '')}</span>
       <h1 style="margin:6px 0 10px; font-size:26px;">${escapeHtml(p.name)}</h1>
-      <div class="price" style="font-size:22px; margin-bottom:18px;">${formatPrice(p.price)}</div>
+      <div class="price" style="font-size:22px; margin-bottom:18px;" data-price-rwf="${Number(p.price) || 0}">&nbsp;</div>
       <p style="color:var(--text-secondary); margin-bottom:24px; white-space:pre-line;">${escapeHtml(p.description || '')}</p>
       <button id="contact-btn" class="btn btn-gold">${t('product_contact_btn')}</button>
     </div>
   `;
+  updatePriceDisplays(mount);
   document.getElementById('contact-btn')?.addEventListener('click', () => {
     openContactModal({ id: p.id, name: p.name, image: p.imageUrl || '' });
   });

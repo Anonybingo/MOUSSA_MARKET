@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marketplace</title>
+  <title>Haki Boutique</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/x-icon" href="/assets/logo.png">
 </head>
 <body>
   <div id="site-header"></div>
@@ -38,11 +39,15 @@
     import { renderChrome } from '/js/components.js';
     import { renderFeatured, activateReveal } from '/js/products.js';
     import { showLoader, hideLoader } from '/js/loader.js';
+    import { updatePriceDisplays } from '/js/currency.js';
 
     document.addEventListener('translations-ready', async () => {
       showLoader();
       await renderFeatured('featured-grid', 3);
       hideLoader();
+    });
+    document.addEventListener('currency-changed', () => {
+      updatePriceDisplays(document.getElementById('featured-grid'));
     });
     renderChrome();
     activateReveal(document.querySelector('.section'));

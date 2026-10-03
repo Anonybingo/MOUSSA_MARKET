@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — Haki Boutique</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container" style="max-width:560px;">
+      <h1 style="font-size:24px; margin-bottom:4px;" data-i18n="profile_title">Profile settings</h1>
+      <p style="color:var(--text-secondary); margin-bottom:24px;" data-i18n="profile_subtitle">Manage your account.</p>
+
+      <div class="card" style="margin-bottom:20px;">
+        <h3 class="panel-title" data-i18n="profile_picture_label">Profile picture</h3>
+        <p class="panel-sub" data-i18n="profile_picture_hint">JPG, PNG, or WEBP, up to 5MB.</p>
+        <div class="image-upload profile-avatar-upload" id="profile-image-upload">
+          <div class="preview" id="profile-image-preview"><i class="ti ti-user" aria-hidden="true"></i></div>
+          <div class="upload-controls">
+            <input type="file" id="profile-image-file" accept="image/*">
+            <div class="field-error" id="profile-image-error"></div>
+            <div class="upload-progress-text" data-i18n="admin_image_uploading">Uploading image...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <h3 class="panel-title" data-i18n="profile_name_label">Full name</h3>
+        <form id="username-form">
+          <div class="field">
+            <input type="text" id="profile-name" name="name" required autocomplete="name">
+          </div>
+          <button type="submit" class="btn btn-navy" data-i18n="profile_name_save">Save name</button>
+          <div class="form-msg" id="username-msg"></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 class="panel-title" data-i18n="profile_password_title">Change password</h3>
+        <form id="password-form">
+          <div class="field">
+            <label for="new-password" data-i18n="profile_new_password_label">New password</label>
+            <div class="input-with-action">
+              <input type="password" id="new-password" name="newPassword" minlength="6" required autocomplete="new-password">
+              <button type="button" class="input-icon-btn" data-toggle-password="new-password" aria-label="Show password">
+                <i class="ti ti-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="confirm-new-password" data-i18n="profile_confirm_new_password_label">Confirm new password</label>
+            <div class="input-with-action">
+              <input type="password" id="confirm-new-password" name="confirmNewPassword" minlength="6" required autocomplete="new-password">
+              <button type="button" class="input-icon-btn" data-toggle-password="confirm-new-password" aria-label="Show password">
+                <i class="ti ti-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="field hidden" id="reauth-field">
+            <label for="current-password" data-i18n="profile_current_password_label">Current password</label>
+            <div class="input-with-action">
+              <input type="password" id="current-password" name="currentPassword" autocomplete="current-password">
+              <button type="button" class="input-icon-btn" data-toggle-password="current-password" aria-label="Show password">
+                <i class="ti ti-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="field-hint" data-i18n="profile_current_password_hint">For your security, please confirm your current password.</div>
+          </div>
+          <button type="submit" class="btn btn-gold" data-i18n="profile_password_save">Change password</button>
+          <div class="form-msg" id="password-msg"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { renderChrome } from '/js/components.js';
+    import { initProfile } from '/js/profile.js';
+    import { initPasswordToggles } from '/js/auth.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
+    renderChrome();
+    initProfile().finally(() => hideLoader());
+    initPasswordToggles();
+  </script>
+</body>
+</html>

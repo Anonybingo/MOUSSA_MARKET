@@ -30,11 +30,10 @@ const firebaseConfig = {
 // From the reCAPTCHA admin console (v3, "score based") — see README.
 const RECAPTCHA_V3_SITE_KEY = "6LdsnH4tAAAAAJyRTR1zkHONVSpawYvZA0jJPh_C";
 
-// WhatsApp Business/support number for the Contact Us -> WhatsApp option.
-// Digits only, with country code, no "+", no spaces (e.g. Rwanda number:
-// "2507XXXXXXXX"). Kept here — the one place — so it's never hard-coded
-// anywhere else; contact.js imports this constant instead of the number itself.
-export const WHATSAPP_NUMBER = "YOUR_WHATSAPP_NUMBER";
+// The WhatsApp number used to live here as a constant. It's now stored in
+// Firestore (settings/general, field whatsappNumber) and editable from the
+// Admin -> Settings tab instead — no code edit or redeploy needed to change
+// it. See js/settings.js.
 
 export const app = initializeApp(firebaseConfig);
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Products — Marketplace</title>
+  <title>Products — Haki Boutique</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -37,6 +37,7 @@
     import { renderChrome } from '/js/components.js';
     import { renderProductGrid, populateCategoryFilter } from '/js/products.js';
     import { showLoader, hideLoader } from '/js/loader.js';
+    import { updatePriceDisplays } from '/js/currency.js';
 
     const searchInput = document.getElementById('search-input');
     const categoryFilter = document.getElementById('category-filter');
@@ -58,6 +59,9 @@
       showLoader();
       await refresh();
       hideLoader();
+    });
+    document.addEventListener('currency-changed', () => {
+      updatePriceDisplays(document.getElementById('product-grid'));
     });
     renderChrome();
 

@@ -6,6 +6,7 @@ import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { loadLanguage, initLangSwitcher, currentLang } from './i18n.js';
 import { openContactModal } from './contact.js';
+import { initCurrency, getCurrentCurrency, setCurrency } from './currency.js';
 
 const HEADER_HTML = `
 <div class="header-decor" aria-hidden="true">
@@ -21,7 +22,10 @@ const HEADER_HTML = `
 </div>
 <div class="glass-bar">
   <div class="container">
-    <a href="/" class="site-logo">Market<span>place</span></a>
+    <a href="/" class="site-logo">
+      <img src="/assets/logo.png" alt="" class="site-logo-mark">
+      Haki <span>Boutique</span>
+    </a>
 
     <button id="nav-hamburger" class="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-panel">
       <i class="ti ti-menu-2" aria-hidden="true"></i>
@@ -45,11 +49,30 @@ const HEADER_HTML = `
             <option value="sw">SW</option>
           </select>
         </div>
+        <div class="currency-switch">
+          <select id="currency-select" aria-label="Currency">
+            <option value="RWF">RWF</option>
+            <option value="UGX">UGX</option>
+            <option value="KES">KES</option>
+            <option value="BIF">BIF</option>
+            <option value="TZS">TZS</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+          </select>
+        </div>
         <a href="/login/" id="nav-login" class="btn btn-gold btn-sm" data-i18n="nav_login">Log in</a>
         <a href="/signup/" id="nav-signup" class="btn btn-outline-light btn-sm" data-i18n="nav_signup">Sign up</a>
         <div id="nav-user" class="user-chip hidden">
-          <a href="/profile/" id="nav-user-name" class="user-name-link"></a>
-          <button id="nav-logout" class="btn btn-outline-light btn-sm" data-i18n="nav_logout">Log out</button>
+          <button type="button" id="nav-avatar-btn" class="nav-avatar-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+            <span class="nav-avatar" id="nav-avatar"><i class="ti ti-user" aria-hidden="true"></i></span>
+          </button>
+          <div class="account-menu" id="account-menu">
+            <div class="account-menu-name" id="account-menu-name"></div>
+            <a href="/profile/" data-i18n="account_menu_settings">Settings</a>
+            <a href="/terms/" data-i18n="account_menu_terms">Terms and conditions</a>
+            <button type="button" id="nav-logout" data-i18n="nav_logout">Log out</button>
+          </div>
         </div>
       </div>
     </div>
@@ -58,9 +81,26 @@ const HEADER_HTML = `
 `;
 
 const FOOTER_HTML = `
-<div class="container">
-  <span>&copy; <span id="footer-year"></span> Marketplace &middot; <span data-i18n="footer_rights">All rights reserved.</span></span>
-  <span>Kigali, Rwanda</span>
+<div class="container footer-grid">
+  <div class="footer-col">
+    <div class="footer-brand">Haki <span>Boutique</span></div>
+    <p class="footer-tagline" data-i18n="footer_tagline">Style that speaks for you.</p>
+    <p class="footer-based-in">Based in Kigali, Rwanda</p>
+  </div>
+  <div class="footer-col">
+    <h4 data-i18n="footer_contact_title">Contact us</h4>
+    <a href="tel:+250782006296">+250 782 006 296</a>
+    <a href="tel:+250739928876">+250 739 928 876</a>
+    <a href="https://wa.me/250781863361" target="_blank" rel="noopener">WhatsApp: +250 781 863 361</a>
+    <a href="mailto:hakizimanmoussa@gmail.com">hakizimanmoussa@gmail.com</a>
+  </div>
+  <div class="footer-col">
+    <h4 data-i18n="footer_countries_title">We deliver to</h4>
+    <p>Uganda &middot; Kenya &middot; Rwanda &middot; Burundi &middot; Tanzania</p>
+  </div>
+</div>
+<div class="container footer-bottom">
+  <span>&copy; <span id="footer-year"></span> Haki Boutique &middot; <span data-i18n="footer_rights">All rights reserved.</span></span>
 </div>
 `;
 
@@ -83,11 +123,32 @@ export async function renderChrome() {
   const langSelect = document.getElementById('lang-select');
   if (langSelect) initLangSwitcher(langSelect);
 
+  wireCurrencySwitcher();
+  initCurrency(); // async, deliberately not awaited — see currency.js for why
+
   highlightActiveNav();
   watchAuthState();
   wireMobileMenu();
   wireScrollEffect();
   wireContactLink();
+  wireAccountMenu();
+}
+
+function wireCurrencySwitcher() {
+  const select = document.getElementById('currency-select');
+  if (!select) return;
+
+  select.value = getCurrentCurrency();
+  select.addEventListener('change', () => {
+    setCurrency(select.value);
+    document.dispatchEvent(new CustomEvent('currency-changed'));
+  });
+
+  // if geolocation-based detection finishes after the dropdown already
+  // rendered, reflect whatever it picked instead of leaving RWF showing
+  document.addEventListener('currency-changed', () => {
+    select.value = getCurrentCurrency();
+  });
 }
 
 function wireContactLink() {
@@ -145,7 +206,8 @@ function watchAuthState() {
     const loginBtn = document.getElementById('nav-login');
     const signupBtn = document.getElementById('nav-signup');
     const userChip = document.getElementById('nav-user');
-    const userName = document.getElementById('nav-user-name');
+    const avatarEl = document.getElementById('nav-avatar');
+    const menuName = document.getElementById('account-menu-name');
     const dashLink = document.getElementById('nav-dashboard');
     const adminLink = document.getElementById('nav-admin');
 
@@ -154,12 +216,17 @@ function watchAuthState() {
       signupBtn?.classList.add('hidden');
       userChip?.classList.remove('hidden');
       dashLink?.classList.remove('hidden');
-      if (userName) userName.textContent = user.displayName || user.email;
+      if (menuName) menuName.textContent = user.displayName || user.email;
 
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
-        const isAdmin = snap.exists() && snap.data().isAdmin === true;
-        adminLink?.classList.toggle('hidden', !isAdmin);
+        const data = snap.exists() ? snap.data() : {};
+        adminLink?.classList.toggle('hidden', data.isAdmin !== true);
+        if (avatarEl) {
+          avatarEl.innerHTML = data.photoURL
+            ? `<img src="${data.photoURL}" alt="">`
+            : '<i class="ti ti-user" aria-hidden="true"></i>';
+        }
       } catch {
         adminLink?.classList.add('hidden');
       }
@@ -178,6 +245,32 @@ function watchAuthState() {
     if (e.target && e.target.id === 'nav-logout') {
       signOut(auth);
     }
+  });
+}
+
+function wireAccountMenu() {
+  const btn = document.getElementById('nav-avatar-btn');
+  const menu = document.getElementById('account-menu');
+  if (!btn || !menu) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  // any click inside the menu (a link or the sign-out button) closes it
+  menu.addEventListener('click', () => {
+    menu.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  });
+
+  // click anywhere outside closes it too
+  document.addEventListener('click', (e) => {
+    if (!menu.classList.contains('open')) return;
+    if (menu.contains(e.target) || btn.contains(e.target)) return;
+    menu.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
   });
 }
 

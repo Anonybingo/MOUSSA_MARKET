@@ -13,6 +13,7 @@ import {
 import { requireAuth } from './components.js';
 import { invalidateProductCache } from './products.js';
 import { listenToConversations, listenToMessages, sendMessage, messageBubbleHTML } from './chat.js';
+import { getSettings, updateSettings } from './settings.js';
 import { t } from './i18n.js';
 
 function escapeHtml(str) {
@@ -38,6 +39,7 @@ export async function initAdmin() {
   wireTabs();
   wireProductForm();
   initAdminChat();
+  initSettingsTab();
   await renderProducts();
   await renderInquiries();
 
@@ -273,5 +275,33 @@ function initAdminChat() {
     if (!text.trim()) return;
     input.value = '';
     await sendMessage(activeConvId, 'admin', text);
+  });
+}
+
+/* ---------------- Settings ---------------- */
+
+function initSettingsTab() {
+  const form = document.getElementById('settings-form');
+  if (!form) return;
+  const msg = document.getElementById('settings-msg');
+
+  getSettings().then((settings) => {
+    if (settings.whatsappNumber) form.whatsappNumber.value = settings.whatsappNumber;
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      await updateSettings({ whatsappNumber: form.whatsappNumber.value.trim() });
+      msg.textContent = t('admin_settings_saved');
+      msg.className = 'form-msg show success';
+    } catch {
+      msg.textContent = t('admin_save_error');
+      msg.className = 'form-msg show error';
+    } finally {
+      submitBtn.disabled = false;
+    }
   });
 }

@@ -1,15 +1,12 @@
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { t } from './i18n.js';
+import { updatePriceDisplays } from './currency.js';
 
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
   return div.innerHTML;
-}
-
-function formatPrice(price) {
-  return `${new Intl.NumberFormat('en-RW').format(price || 0)} RWF`;
 }
 
 function productCardHTML(id, p) {
@@ -24,7 +21,7 @@ function productCardHTML(id, p) {
       <div class="body">
         <span class="category">${category}</span>
         <h3>${name}</h3>
-        <div class="price">${formatPrice(p.price)}</div>
+        <div class="price" data-price-rwf="${Number(p.price) || 0}">&nbsp;</div>
         <span class="btn btn-gold btn-sm">${t('product_contact_btn')}</span>
       </div>
     </a>`;
@@ -81,6 +78,7 @@ export async function renderFeatured(mountId, count = 3) {
   const list = products.slice(0, count);
   mount.innerHTML = list.length ? list.map((p) => productCardHTML(p.id, p)).join('') : emptyStateHTML();
   activateReveal(mount);
+  updatePriceDisplays(mount);
 }
 
 export async function renderProductGrid(mountId, { search = '', category = '' } = {}) {
@@ -98,6 +96,7 @@ export async function renderProductGrid(mountId, { search = '', category = '' } 
 
   mount.innerHTML = products.length ? products.map((p) => productCardHTML(p.id, p)).join('') : emptyStateHTML();
   activateReveal(mount);
+  updatePriceDisplays(mount);
 }
 
 export async function populateCategoryFilter(selectId) {

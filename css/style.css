@@ -6,15 +6,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  /* Colors */
+  /* Colors — Haki Boutique: warm dark brown + gold, on a white/off-white
+     base. Variable names kept as --navy/--navy-* for a low-risk update
+     (every rule in this file already references these tokens) even
+     though the values are now brown, not blue. */
   --bg: #FAFAFA;
   --surface: #FFFFFF;
-  --navy: #152A4A;
-  --navy-rgb: 21, 42, 74;
-  --navy-dark: #0F2038;
-  --navy-dark-rgb: 15, 32, 56;
-  --navy-tint: #EDF1F7;
-  --navy-text: #B9C4D6;
+  --navy: #241811;
+  --navy-rgb: 36, 24, 17;
+  --navy-dark: #160E09;
+  --navy-dark-rgb: 22, 14, 9;
+  --navy-tint: #F3EDE4;
+  --navy-text: #D9C7B0;
   --gold: #D9A441;
   --gold-dark: #C7943A;
   --gold-text-on: #4A2F06;
@@ -28,7 +31,8 @@
   --danger: #C0392B;
   --danger-bg: #FBEAE8;
 
-  /* Status colors (inquiry pipeline) */
+  /* Status colors (inquiry pipeline) — left as-is; these are functional
+     status indicators, not brand colors, so they don't need to match. */
   --status-pending: #9CA3AF;
   --status-responded: #2F5D9E;
   --status-negotiating: #D9A441;
@@ -41,7 +45,7 @@
   /* Layout */
   --radius: 10px;
   --radius-lg: 16px;
-  --shadow-card: 0 1px 2px rgba(21, 42, 74, 0.06);
+  --shadow-card: 0 1px 2px rgba(36, 24, 17, 0.06);
   --max-width: 1160px;
 }
 
@@ -123,7 +127,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   z-index: 1;
   max-width: var(--max-width);
   margin: 0 auto;
-  background: rgba(20, 22, 28, 0.6);
+  background: rgba(26, 20, 15, 0.6);
   backdrop-filter: blur(34px) saturate(140%);
   -webkit-backdrop-filter: blur(34px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -134,13 +138,13 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* slightly denser glass once the page has scrolled, for legibility over content */
 .site-header.scrolled .glass-bar {
-  background: rgba(14, 16, 21, 0.8);
+  background: rgba(18, 14, 10, 0.8);
   box-shadow: 0 6px 26px rgba(0, 0, 0, 0.2);
 }
 
 /* graceful fallback for browsers without backdrop-filter support */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-bar { background: rgba(20, 22, 28, 0.94); }
+  .glass-bar { background: rgba(26, 20, 15, 0.94); }
 }
 
 .site-header .container {
@@ -160,6 +164,15 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   color: #FFFFFF;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-logo-mark {
+  height: 30px;
+  width: auto;
+  display: block;
 }
 
 .site-logo span { color: var(--gold); }
@@ -215,11 +228,11 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
 }
 
-.lang-switch {
+.lang-switch, .currency-switch {
   position: relative;
 }
 
-.lang-switch select {
+.lang-switch select, .currency-switch select {
   appearance: none;
   background: rgba(255, 255, 255, 0.12);
   border: 0.5px solid rgba(255, 255, 255, 0.3);
@@ -230,7 +243,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   cursor: pointer;
 }
 
-.lang-switch::after {
+.lang-switch::after, .currency-switch::after {
   content: '';
   position: absolute;
   right: 9px;
@@ -244,16 +257,100 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .user-chip {
-  color: #FFFFFF;
-  font-size: 13px;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-.user-chip .user-name-link { color: #FFFFFF; font-weight: 500; }
-.user-chip .user-name-link:hover { color: var(--gold); }
+.nav-avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+}
+
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  color: #FFFFFF;
+  font-size: 16px;
+  transition: border-color 0.15s ease;
+}
+.nav-avatar-btn:hover .nav-avatar { border-color: var(--gold); }
+.nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.account-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 210px;
+  background: rgba(18, 14, 10, 0.7);
+  backdrop-filter: blur(36px) saturate(140%);
+  -webkit-backdrop-filter: blur(36px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 250;
+}
+
+.account-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.account-menu-name {
+  padding: 9px 10px 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-menu a,
+.account-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--navy-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.account-menu a:hover,
+.account-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+@media (max-width: 860px) {
+  .account-menu { right: auto; left: 0; }
+}
 
 /* Mobile: nav links + auth actions collapse into a glass dropdown panel
    triggered by the hamburger button, instead of wrapping awkwardly. */
@@ -265,7 +362,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
     top: calc(100% + 10px);
     left: 0;
     right: 0;
-    background: rgba(14, 16, 21, 0.7);
+    background: rgba(18, 14, 10, 0.7);
     backdrop-filter: blur(36px) saturate(140%);
     -webkit-backdrop-filter: blur(36px) saturate(140%);
     border: 1px solid rgba(255, 255, 255, 0.09);
@@ -302,7 +399,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
     border-top: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  .lang-switch select { width: 100%; }
+  .lang-switch select, .currency-switch select { width: 100%; }
   .user-chip { flex-direction: column; align-items: stretch; }
 }
 
@@ -385,8 +482,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background:
     linear-gradient(to bottom, var(--bg) 0%, transparent 18%),
     radial-gradient(circle at 15% 20%, rgba(217, 164, 65, 0.28), transparent 45%),
-    radial-gradient(circle at 85% 10%, rgba(47, 93, 158, 0.24), transparent 50%),
-    linear-gradient(160deg, #152A4A 0%, #1c3a63 55%, #2f5d9e 100%);
+    radial-gradient(circle at 85% 10%, rgba(184, 147, 90, 0.22), transparent 50%),
+    linear-gradient(160deg, #241811 0%, #3a2818 55%, #5c4028 100%);
 }
 
 .hero .container { width: 100%; }
@@ -737,6 +834,10 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   flex-shrink: 0;
 }
 .image-upload .preview img { width: 100%; height: 100%; object-fit: cover; }
+
+/* profile picture uses the same upload component, just round instead of square */
+.profile-avatar-upload .preview { border-radius: 50%; font-size: 26px; }
+
 .image-upload .upload-controls { flex: 1; min-width: 0; }
 .image-upload input[type="file"] {
   font-size: 12px;
@@ -896,20 +997,55 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background: var(--navy-dark);
   color: var(--navy-text);
   margin-top: auto;
-  padding: 32px 0;
+  padding-top: 40px;
   font-size: 13px;
 }
 
-.site-footer .container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 28px;
+  padding-bottom: 28px;
+}
+
+.footer-brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  color: #FFFFFF;
+  margin-bottom: 6px;
+}
+.footer-brand span { color: var(--gold); }
+
+.footer-tagline { color: var(--navy-text); margin-bottom: 10px; }
+.footer-based-in { color: var(--navy-text); opacity: 0.75; font-size: 12px; }
+
+.footer-col h4 {
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.footer-col a,
+.footer-col p {
+  display: block;
+  color: var(--navy-text);
+  margin-bottom: 7px;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 0;
 }
 
 .site-footer a { color: var(--navy-text); }
-.site-footer a:hover { color: #FFFFFF; }
+.site-footer a:hover { color: var(--gold); }
+
+@media (max-width: 720px) {
+  .footer-grid { grid-template-columns: 1fr; gap: 20px; }
+}
 
 /* ==========================================================================
    Utility

@@ -2,13 +2,17 @@
 // toggles visibility — cheap to call showLoader()/hideLoader() as often as
 // you like (form submits, image uploads, initial fetches, anything async).
 //
+// Deliberately does NOT depend on i18n.js's t() for its default text: the
+// loader is shown at the very start of page load, before the translations
+// fetch has necessarily resolved, so t() would return the raw key string
+// ("common_loading") instead of real text. It reads the saved language
+// directly from localStorage instead — synchronous, always available.
+//
 // Usage from any page/module:
 //   import { showLoader, hideLoader } from '/js/loader.js';
 //   showLoader();                     // generic "Loading..."
 //   showLoader('Uploading image...'); // or a specific message
 //   hideLoader();
-
-import { t } from './i18n.js';
 
 const ICONS = [
   'ti-shopping-cart',
@@ -20,6 +24,18 @@ const ICONS = [
   'ti-gift',
   'ti-truck-delivery'
 ];
+
+const LOADING_TEXT = {
+  en: 'Loading...',
+  rw: 'Birimo gupakira...',
+  fr: 'Chargement...',
+  sw: 'Inapakia...'
+};
+
+function defaultLoadingText() {
+  const lang = localStorage.getItem('lang');
+  return LOADING_TEXT[lang] || LOADING_TEXT.en;
+}
 
 let overlay = null;
 
@@ -52,7 +68,7 @@ function build() {
   center.className = 'loader-center';
   center.innerHTML = `
     <div class="loader-spinner"></div>
-    <p class="loader-text">${t('LOADING')}</p>
+    <p class="loader-text">${defaultLoadingText()}</p>
   `;
 
   overlay.appendChild(iconsWrap);
@@ -63,7 +79,7 @@ function build() {
 export function showLoader(message) {
   build();
   const textEl = overlay.querySelector('.loader-text');
-  if (textEl) textEl.textContent = message || t('LOADING');
+  if (textEl) textEl.textContent = message || defaultLoadingText();
   overlay.classList.add('show');
   document.body.style.overflow = 'hidden';
 }

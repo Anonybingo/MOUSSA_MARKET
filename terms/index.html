@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms and conditions — Haki Boutique</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="section">
+    <div class="container" style="max-width:680px;">
+      <h1 style="font-size:26px; margin-bottom:10px;" data-i18n="terms_title">Terms and conditions</h1>
+
+      <div class="card" style="background:var(--danger-bg); border-color:#f0c9c4; margin-bottom:24px;">
+        <p style="color:var(--danger); font-size:13px; margin:0;" data-i18n="terms_placeholder_notice">
+          Placeholder text — replace this page with your actual terms before launch.
+        </p>
+      </div>
+
+      <div class="card" style="line-height:1.7; color:var(--text-secondary); font-size:14px;">
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">1. Acceptance of terms</h3>
+        <p style="margin-bottom:20px;">By using this website, you agree to these terms. If you don't agree, please don't use the site.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">2. What this site does</h3>
+        <p style="margin-bottom:20px;">This is a listings marketplace. Sellers post products; buyers browse and contact sellers directly (by message, chat, or WhatsApp) to agree on price and arrange the sale themselves. This site does not process payments and is not a party to any transaction between buyers and sellers.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">3. Accounts</h3>
+        <p style="margin-bottom:20px;">You're responsible for the accuracy of the information on your account and for keeping your password secure. You're responsible for activity that happens under your account.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">4. Listings and pricing</h3>
+        <p style="margin-bottom:20px;">Sellers are responsible for the accuracy of their own listings — description, price, condition, and availability. Prices shown are starting points for negotiation, not final offers.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">5. No guarantee of transactions</h3>
+        <p style="margin-bottom:20px;">Because deals are arranged directly between buyer and seller, this site can't guarantee any listing is accurate, that a seller will complete a sale, or that a buyer will follow through. Use good judgment when meeting or exchanging goods with someone you've contacted here.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">6. Acceptable use</h3>
+        <p style="margin-bottom:20px;">Don't post anything illegal, fraudulent, or misleading, and don't use the messaging or chat features to harass or spam other users.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">7. Limitation of liability</h3>
+        <p style="margin-bottom:20px;">This site is provided as-is. To the fullest extent allowed by law, we're not liable for disputes, losses, or damages arising from transactions or communications between users.</p>
+
+        <h3 style="color:var(--text-primary); font-size:16px; margin-bottom:8px;">8. Changes to these terms</h3>
+        <p style="margin-bottom:0;">These terms may be updated from time to time. Continued use of the site after a change means you accept the update.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script type="module">
+    import { renderChrome } from '/js/components.js';
+    import { showLoader, hideLoader } from '/js/loader.js';
+
+    showLoader();
+    renderChrome().finally(() => hideLoader());
+  </script>
+</body>
+</html>

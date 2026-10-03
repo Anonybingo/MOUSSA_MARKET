@@ -17,14 +17,18 @@ service cloud.firestore {
     }
 
     // ---- users ----
-    // A user can read and create only their own profile doc, and can never
-    // set isAdmin themselves (see README for how to promote an admin).
+    // A user can read and create only their own profile doc, and can update
+    // their own name/photo — but never their own isAdmin flag (compared
+    // against what's already stored, so it can only ever stay the same).
     match /users/{userId} {
       allow read: if isSignedIn() && request.auth.uid == userId;
       allow create: if isSignedIn()
         && request.auth.uid == userId
         && request.resource.data.isAdmin == false;
-      allow update, delete: if false;
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.isAdmin == resource.data.isAdmin;
+      allow delete: if false;
     }
 
     // ---- products ----
@@ -66,6 +70,14 @@ service cloud.firestore {
               || (isAdmin() && request.resource.data.sender == 'admin'));
         allow update, delete: if false;
       }
+    }
+    // ---- settings ----
+    // Site-wide config (currently just the WhatsApp number). Anyone visiting
+    // needs to read it to use the WhatsApp contact option, so it's public
+    // read; only an admin can change it, from Admin -> Settings.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

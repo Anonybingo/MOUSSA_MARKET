@@ -1,9 +1,19 @@
-# Marketplace
+# Haki Boutique
 
-Static HTML/CSS/JS marketplace — browse products, contact the seller to
-negotiate price (no checkout), track inquiry progress from a dashboard.
-Same no-build-step approach as HEALTH: plain files, Firebase for
-auth/data/hosting, nothing to compile.
+Static HTML/CSS/JS marketplace for a Rwanda-based clothing boutique —
+browse products, contact the seller to negotiate price (no checkout),
+track inquiry progress from a dashboard. Same no-build-step approach as
+HEALTH: plain files, Firebase for auth/data/hosting, nothing to compile.
+
+Originally built as a generic "Marketplace" and rebranded to Haki
+Boutique partway through — real logo (extracted from the shop's flyer),
+a warm brown/gold palette in place of the original navy, a hero tagline,
+an expanded footer with the shop's actual contact details and delivery
+countries, and an instant currency converter (see "Currency conversion"
+below). The rebrand only touches presentation — colors, copy, the footer
+and header markup, and the logo asset; none of it changes the data model,
+Firestore rules, or how any existing feature (auth, inquiries, chat,
+admin) works.
 
 ## What's here
 
@@ -21,11 +31,13 @@ dashboard/index.html    Signed-in user's own inquiries, with a status stepper
 about/index.html       Static about/contact page
 admin/index.html       Product catalog + inquiry status management
 
-css/style.css        Design system (navy / off-white / gold, from the mockup)
+css/style.css        Design system (warm brown / off-white / gold, from the flyer)
 js/firebase-config.js  <- your Firebase project keys go here
 js/i18n.js, lang/*.json    Language switching (EN / RW / FR / SW)
 js/components.js     Shared header/footer + auth-aware nav
+js/currency.js        Location-based currency detection + live price conversion
 js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
+assets/logo.png       Haki Boutique logo (cropped/cleaned from the flyer image)
 
 firestore.rules       Firestore security rules — deploy these, see below
 storage.rules        Storage rules — not deployed/needed right now, see below
@@ -146,8 +158,14 @@ Built in this pass, on top of the original marketplace:
   scrolling the other way — a real bidirectional toggle, not a one-shot
   animation (`.reveal` class, `activateReveal()` in `products.js`) ·
   a reusable full-screen **loader** with the same falling icons and a
-  center spinner (`js/loader.js` — `showLoader()`/`hideLoader()`, not
-  wired into anything by default, drop it in wherever there's a wait).
+  center spinner (`js/loader.js`), now wired into all 9 pages — shows
+  the moment a page starts loading and hides once *that page's* real
+  content (data fetch, auth check, or just translations) actually
+  resolves, not a fixed delay. Its default text no longer depends on
+  translations being loaded yet (that was briefly a bug — it could show
+  the literal string "common_loading" on first paint since the loader
+  appears before the async translations fetch resolves; it now carries
+  its own tiny synchronous language lookup instead).
   All of the above skips automatically for anyone with reduced-motion set.
 - **Contact Us — three options, on both sides.** Clicking "Contact us"
   (now in the nav on every page, and still on each product page with
@@ -158,25 +176,121 @@ Built in this pass, on top of the original marketplace:
   - **Web Chat** — real, live, two-way. `js/chat.js` holds the shared
     Firestore logic (`conversations/{uid}/messages` subcollection,
     `onSnapshot` listeners); `/chat/` is the user-facing thread; the
-    Admin page's new **Chat** tab lists every conversation and lets you
+    Admin page's **Chat** tab lists every conversation and lets you
     reply to any of them — both sides update in real time, no refresh.
   - **WhatsApp** — opens `wa.me` with a pre-filled message (mentions the
-    product if there is one). **Set your number first**: `WHATSAPP_NUMBER`
-    in `js/firebase-config.js` is still a placeholder — digits only,
-    country code, no `+`, e.g. a Rwanda number would look like
-    `"2507XXXXXXXX"`.
-  
-  `firestore.rules` now covers `conversations` and its `messages`
-  subcollection: a user can only ever read/write their own conversation
-  (keyed by their own uid), admins can read/write any of them.
+    product if there is one). The number is **not in code** — it's a
+    Firestore setting you edit from Admin → **Settings**, so changing it
+    never needs a code edit or redeploy (`js/settings.js`,
+    `settings/general` doc, public read / admin-only write).
 
-Not built yet — flagging clearly rather than shipping something half-done:
+  `firestore.rules` covers `conversations` and its `messages` subcollection
+  (a user can only ever read/write their own, keyed by their own uid;
+  admins can read/write any of them) and `settings` (public read,
+  admin-only write).
+- **Account menu** replaces the old name-as-link in the nav. Signed-in
+  users now see a circular avatar (their profile picture, or a default
+  person icon if they haven't uploaded one) instead of their name.
+  Clicking it opens a glass dropdown — same frosted look as the navbar
+  itself — showing their name, **Settings** (→ `/profile/`), **Terms and
+  conditions** (→ `/terms/`, placeholder content, clearly marked to
+  replace before launch), and **Log out**, which moved here from its old
+  spot as a standalone header button.
+- **Profile Settings** (`/profile/`, `js/profile.js`) — reachable from
+  the account menu above:
+  - **Profile picture** — upload via imgbb (same shared helper as product
+    images, factored out into `js/imgbb.js` so the API key lives in one
+    place instead of being duplicated per feature), saved to
+    `users/{uid}.photoURL`, and reflected in the header avatar right away.
+  - **Username** — updates both Firebase Auth's `displayName` and the
+    Firestore user doc, and patches the account menu immediately so you
+    see the change without a refresh.
+  - **Password** — tries the change directly first; if Firebase reports
+    the session is too old (`auth/requires-recent-login`), a "current
+    password" field appears so you can re-authenticate, then it retries
+    automatically. No separate/fake password system — this is Firebase
+    Auth's own `updatePassword` and `reauthenticateWithCredential`.
 
-- **Profile Settings** (`/profile/`) — profile picture upload (via imgbb,
-  same as product images), username change, password change with
-  re-authentication.
-- A full responsive/QA sweep across every page is worth doing once, at
-  the end, rather than piecemeal after each feature.
+  This needed `firestore.rules` to loosen slightly: users can now update
+  their *own* profile doc (name, photo), but a rule still blocks anyone
+  from changing their own `isAdmin` field — every update is checked
+  against the value already stored, so it can only ever stay the same.
+- **Haki Boutique rebrand** — real logo in the header (cropped and
+  cleaned up from the shop's flyer image — the dark background around
+  it made transparent, `assets/logo.png`), the color palette swapped
+  from navy to a warm brown/gold (same CSS variable names in
+  `style.css`, just repointed to new hex values, so every rule that
+  already referenced a variable picked up the new look with no
+  structural changes) while the main page background stays white as
+  asked, a hero tagline ("Style that speaks for you") above the search
+  bar, and a footer rebuilt as three columns — brand + tagline, contact
+  (phone numbers, WhatsApp, email), and the delivery countries from the
+  flyer (Uganda, Kenya, Rwanda, Burundi, Tanzania) — replacing the old
+  single-row footer.
+- **Instant currency converter** (`js/currency.js`) — prices are stored
+  in RWF everywhere in Firestore (unchanged); this only affects what's
+  *displayed*:
+  - On a visitor's first visit, it asks for location permission and, if
+    granted, reverse-geocodes their coordinates to a country and picks
+    that country's currency automatically (RWF/UGX/KES/BIF/TZS for the
+    flyer's delivery countries, plus USD/EUR/GBP as common majors).
+  - If location permission is denied, times out, or isn't available,
+    nothing is guessed — it deliberately does **not** fall back to a
+    silent IP-based lookup, since re-detecting location right after
+    someone declines to share it would quietly undermine that choice.
+    It simply stays on RWF until the visitor picks a currency themselves.
+  - The **currency switcher** in the header (next to the language
+    switcher, same styling) is both the manual fallback and an always-
+    available override — changing it updates every visible price
+    instantly, no page reload, by firing a `currency-changed` event
+    that every page listens for.
+  - Conversion rates come from the free, keyless
+    [Frankfurter API](https://api.frankfurter.dev/) (cached in
+    `localStorage` for 12 hours — rates don't need to be second-fresh,
+    and this avoids re-fetching on every page); location → country
+    comes from the free, keyless
+    [BigDataCloud reverse-geocode API](https://www.bigdatacloud.net/).
+    Both are CORS-open, which matters here since this is a static site
+    with no backend to proxy the request through.
+  - Implementation-wise: any price element renders with a
+    `data-price-rwf="<amount>"` attribute instead of pre-formatted text
+    (`products.js`, `product-detail.js`); `updatePriceDisplays()` fills
+    in every such element in whatever currency is currently selected,
+    and gets called once after rendering and again on every
+    `currency-changed` event. That split means switching currency never
+    needs to re-render product cards from scratch — just re-format the
+    numbers already on screen.
+  - If you ever want to adjust which countries map to which currency,
+    or add more currencies to the manual dropdown, that's all in one
+    place: `COUNTRY_TO_CURRENCY` and `CURRENCY_OPTIONS` near the top of
+    `js/currency.js`.
+
+Not built yet:
+
+- Nothing outstanding from this pass — see "Verification" below for
+  what was checked before shipping.
+
+## Verification
+
+Before shipping the rebrand + currency work, every file touched in that
+pass was checked:
+
+- Every `.js` file parses cleanly as an ES module (`node --check`).
+- Every `.html` page has balanced tags (scripted check, not just a
+  visual skim).
+- `style.css`'s braces balance (210 rules, no stray `{`/`}`).
+- Every `getElementById(...)`/`querySelector('#...')` call in the JS
+  matches a real id somewhere in the markup — this is what catches a
+  stale reference like the `#nav-user-name` one from an earlier pass
+  (fixed; see `profile.js`).
+- All four `lang/*.json` files are valid JSON with the exact same 138
+  keys as `en.json` — no page can end up missing a translation in one
+  language but not another.
+- The new logo, header, hero, currency switcher, and footer were
+  rendered (not just read as code) via a headless browser against the
+  real stylesheet, to confirm the brown/gold palette, the tagline
+  placement, and the three-column footer actually look right and not
+  just "should work on paper."
 
 ## Translations
 
@@ -188,9 +302,13 @@ one I'd trust least of the four.
 ## Data shapes (for reference)
 
 ```
-users/{uid}        { name, email, isAdmin, createdAt }
+users/{uid}        { name, email, isAdmin, createdAt, photoURL? }
 products/{id}       { name, price, category, imageUrl, description, createdAt }
+                     price is always stored in RWF — js/currency.js converts
+                     it for display only; nothing server-side ever converts it
 inquiries/{id}       { productId, productName, productImage, userId, userEmail,
                        userName, message, status, createdAt }
                      status: "pending" -> "responded" -> "negotiating" -> "closed"
+settings/general     { whatsappNumber }  — public read, admin-only write
+conversations/{uid}/messages/{id}   { from, text, createdAt }  — chat thread
 ```

@@ -8,10 +8,11 @@
 //   openContactModal();                                   // general
 //   openContactModal({ id, name, image: imageUrl });       // from a product page
 
-import { auth, db, WHATSAPP_NUMBER } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js';
 import { t } from './i18n.js';
+import { getSettings } from './settings.js';
 
 let modal = null;
 let currentUser = null;
@@ -89,7 +90,7 @@ function showOptions() {
   modal.querySelector('#contact-message-form').classList.add('hidden');
 }
 
-function handleOption(option) {
+async function handleOption(option) {
   if (option === 'chat') {
     if (!currentUser) {
       close();
@@ -101,10 +102,14 @@ function handleOption(option) {
   }
 
   if (option === 'whatsapp') {
+    const settings = await getSettings();
+    const number = (settings.whatsappNumber || '').trim();
+    if (!number) return; // admin hasn't set a number yet — nothing to open
+
     const intro = currentProduct
       ? `${t('contact_whatsapp_text_product')} "${currentProduct.name}"`
       : t('contact_whatsapp_text_general');
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(intro)}`, '_blank', 'noopener');
+    window.open(`https://wa.me/${number}?text=${encodeURIComponent(intro)}`, '_blank', 'noopener');
     close();
     return;
   }
