@@ -57,8 +57,11 @@
 
     document.addEventListener('translations-ready', async () => {
       showLoader();
-      await refresh();
-      hideLoader();
+      try {
+        await refresh();
+      } finally {
+        hideLoader(); // even if the fetch fails — a stuck overlay would block the whole page
+      }
     });
     document.addEventListener('currency-changed', () => {
       updatePriceDisplays(document.getElementById('product-grid'));

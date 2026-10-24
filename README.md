@@ -36,6 +36,9 @@ js/firebase-config.js  <- your Firebase project keys go here
 js/i18n.js, lang/*.json    Language switching (EN / RW / FR / SW)
 js/components.js     Shared header/footer + auth-aware nav
 js/currency.js        Location-based currency detection + live price conversion
+js/hero-fx.js        Home hero: headline intro, floating glass icons, aurora, parallax
+js/card-fx.js        Product-card hover tilt + glare (pulled in by products.js)
+js/marquee.js        The gold ticker strip on the home page
 js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
 assets/logo.png       Haki Boutique logo (cropped/cleaned from the flyer image)
 
@@ -265,6 +268,87 @@ Built in this pass, on top of the original marketplace:
     place: `COUNTRY_TO_CURRENCY` and `CURRENCY_OPTIONS` near the top of
     `js/currency.js`.
 
+- **Home-page motion** — three pieces, all progressive enhancement (the
+  page is complete without any of them) and all switched off for visitors
+  whose device asks for reduced motion:
+  - **Hero intro + ambient layers** (`js/hero-fx.js`, the "Hero motion" and
+    "Hero ambient layers" blocks of `style.css`). The headline is split
+    into words and masked letters that rise in one after another; the
+    longest word of the headline, in whichever language is showing, becomes
+    the gold accent, with a light band sweeping across it and a hand-drawn
+    underline. The subtitle and search bar follow, then seven frosted-glass
+    fashion icons pop in around the text. They bob slowly and shift with the
+    pointer (on touch screens they drift on their own), over a slow
+    gold/copper aurora and twinkling four-point sparkles; with a mouse, a
+    warm spotlight follows the cursor too, and a small scroll cue sits at the
+    bottom. Scrolling fades the hero text out while the text and each layer
+    trail the page at their own rates, which gives the parallax. How it
+    behaves:
+    - An inline script in `index.html`'s `<head>` adds `html.hero-fx-armed`
+      before first paint (unless reduced motion is set), which parks the
+      intro's targets. The intro starts (`hero-fx-play`) once the
+      translations are applied, the web fonts are ready and the loader
+      overlay is gone (`hideLoader()` now dispatches a `loader-hidden`
+      event for this), so it never plays behind the loader. A 7-second timer
+      releases the hero no matter what, so a script failure can't leave it
+      hidden.
+    - It plays in full on the first visit of a session and in about 40% of
+      the time after that. When the language is switched the headline is
+      split again for the new words and its letters rise in again.
+    - Reduced motion (or no JS): no intro, no movement. The layers are still
+      drawn, standing still, and the headline keeps its gold accent word.
+    - Nothing runs while the hero is off screen: the CSS animations pause and
+      the script's render loop stops. With a mouse the loop also sleeps
+      whenever nothing is moving; on touch screens it runs while the hero is
+      visible, because the icons drift on their own.
+    - The icons' positions are percentages in CSS, but where the text really
+      sits depends on the language and the screen, so after layout each icon
+      is checked against the text and the ones that would land on it are
+      hidden for that layout (`clearFloaters()`).
+  - **Product cards** (`js/card-fx.js`, `.product-card` in `style.css`).
+    Cards fade and slide in one after another as they scroll into view.
+    With a mouse or trackpad, a card then leans away from the pointer (up to
+    7°, `MAX_TILT`), a soft highlight follows the pointer across the photo
+    and the shadow swings the other way. One delegated listener covers cards
+    rendered later (search, filters, language switches); touch devices and
+    reduced motion get plain hover styling only. This pass also fixed two
+    bugs in the old reveal: the card's own `transition` rule replaced the
+    reveal's, so cards popped in instead of fading; and the stagger was an
+    inline `transition-delay` that stayed on each card and delayed every
+    hover effect afterwards, by up to 0.6 s. The stagger is now a CSS
+    variable (`--reveal-delay`) that only affects the reveal. Re-renders
+    (typing in the search box, changing a filter) skip the stagger and just
+    fade in quickly; only the first render of a grid staggers.
+  - **Ticker strip** (`js/marquee.js`, "Marquee strip" in `style.css`). A
+    gold band between the hero and "Featured products", scrolling
+    continuously: the tagline, the shop's highlights and the four
+    languages. The HTML holds one set of items; the script repeats it until
+    it spans the screen and clones that group once, so the loop is seamless
+    at any width (checked up to 2560 px) and is rebuilt on resize, language
+    switch and when the web font lands. Scrolling the page down speeds it up
+    and scrolling up reverses it, easing back to its own pace when you stop.
+    It pauses on hover, while off screen, on a tap, and from a button that
+    only keyboard users ever see (moving text needs a way to stop it —
+    WCAG 2.2.2). The six strings it adds are `marquee_*` in `lang/*.json`
+    (the tagline and the headline are reused from the hero's keys).
+
+  Where to adjust things: the floating icons are `ICONS`/`FLOATERS` in
+  `hero-fx.js` with their positions in the `.fx-floater:nth-child(n)` rules
+  of the CSS; the intro's timing is the `animation` delays in the "Hero
+  motion" block (everything is multiplied by `--dscale`); the ticker's items
+  are the `<li>`s in `index.html` and its pace is `SPEED` in `marquee.js`;
+  tilt strength is `MAX_TILT` in `card-fx.js`. To remove one piece: for the
+  hero, delete both the inline arming script and the `/js/hero-fx.js` tag in
+  `index.html` (the arming script alone would keep the hero's subtitle and
+  search bar hidden for its 7 seconds); for the ticker, delete its
+  `<script>` tag and the `<section class="marquee">`; for the card tilt,
+  delete the `import './card-fx.js'` line in `products.js`. Nothing else
+  depends on them. Browser support: this uses the individual
+  `translate`/`scale`/`rotate` properties (Chrome 104+, Safari 14.1+,
+  Firefox 72+) and a registered custom property for the accent shimmer
+  (Chrome 85+, Safari 16.4+, Firefox 128+; without it the shimmer jumps
+  instead of gliding, the word stays gold).
+
 Not built yet:
 
 - Nothing outstanding from this pass — see "Verification" below for
@@ -278,26 +362,57 @@ pass was checked:
 - Every `.js` file parses cleanly as an ES module (`node --check`).
 - Every `.html` page has balanced tags (scripted check, not just a
   visual skim).
-- `style.css`'s braces balance (210 rules, no stray `{`/`}`).
+- `style.css`'s braces balance (400 `{` against 400 `}`, no strays).
 - Every `getElementById(...)`/`querySelector('#...')` call in the JS
   matches a real id somewhere in the markup — this is what catches a
   stale reference like the `#nav-user-name` one from an earlier pass
   (fixed; see `profile.js`).
-- All four `lang/*.json` files are valid JSON with the exact same 138
-  keys as `en.json` — no page can end up missing a translation in one
-  language but not another.
+- All four `lang/*.json` files are valid JSON with the exact same 144
+  keys as `en.json`, in the same order — no page can end up missing a
+  translation in one language but not another. Every key the JS asks
+  for (`t('...')`) and every `data-i18n` attribute in the markup exists.
 - The new logo, header, hero, currency switcher, and footer were
   rendered (not just read as code) via a headless browser against the
   real stylesheet, to confirm the brown/gold palette, the tagline
   placement, and the three-column footer actually look right and not
   just "should work on paper."
 
+The home-page motion pass was checked by running it, not just reading it.
+A scripted headless Chromium loaded the real pages, stylesheet, fonts and
+icons against a stubbed Firebase (so no network or account was needed) and
+every animation was stepped frame by frame, which makes the timing
+checkable instead of "looked fine once":
+
+- Hero intro and ambient layers in all four languages at widths from 360 to
+  2560 px: no icon sits on the text (French and Swahili headlines are the
+  longest and needed the collision pass), the gold accent word is the right
+  one, and a language switch or window resize leaves nothing broken.
+- Reduced motion, touch-only devices and a blocked script: each falls back to
+  a complete, still page, and the 7-second timer releases the hero if
+  `hero-fx.js` never runs.
+- The ticker loops without a visible seam at every width tested, speeds up
+  and reverses with scrolling, and pauses on hover, off screen, on tap and
+  from the keyboard button.
+- Cards fade in one after another, hover effects are not delayed, and
+  searching re-renders them quickly.
+- No console errors or uncaught exceptions on any of it.
+
+What was not covered: only Chromium was available, so Safari and Firefox
+are untested. The support notes above come from the specifications, not
+from running those browsers, so give them a look on a real iPhone and a
+Firefox desktop before launch.
+
+Also fixed while sweeping: `/products/` showed the loading overlay and, if
+the product fetch failed, never took it down again — which would have
+blocked the whole page. It now uses `try`/`finally` like the home page.
+
 ## Translations
 
 EN and FR are solid. Kinyarwanda (`lang/rw.json`) and Swahili
 (`lang/sw.json`) are a solid first pass but worth a native-speaker
 read-through before this goes live, especially the Kinyarwanda — it's the
-one I'd trust least of the four.
+one I'd trust least of the four. That includes the six new `marquee_*`
+strings for the ticker, which are short but were written the same way.
 
 ## Data shapes (for reference)
 

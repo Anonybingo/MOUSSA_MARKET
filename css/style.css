@@ -466,6 +466,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .hero {
   position: relative;
   overflow: hidden;
+  /* own stacking context, so the motion layers below can be ordered with
+     plain z-index values without leaking behind or above the rest of the page */
+  isolation: isolate;
   min-height: 86vh;
   display: flex;
   align-items: center;
@@ -474,30 +477,54 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   text-align: center;
 }
 
+/* back to front: ::before (-1) brown base · .hero-fx (0) aurora, sparkles,
+   floating icons · .container (1) the text · ::after (2) white fade at the top */
 .hero::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(to bottom, var(--bg) 0%, transparent 18%),
     radial-gradient(circle at 15% 20%, rgba(217, 164, 65, 0.28), transparent 45%),
     radial-gradient(circle at 85% 10%, rgba(184, 147, 90, 0.22), transparent 50%),
     linear-gradient(160deg, #241811 0%, #3a2818 55%, #5c4028 100%);
 }
 
-.hero .container { width: 100%; }
+/* the soft white-to-brown transition under the glass navbar. It used to be
+   the first layer of ::before; it lives above the motion layers now so they
+   fade into it instead of bleeding across it */
+.hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 18%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+}
+
+.hero .container { width: 100%; position: relative; z-index: 1; }
 .hero h1, .hero p, .hero .eyebrow { color: #FFFFFF; }
 .hero p { color: rgba(255, 255, 255, 0.75); }
 
 .hero h1 {
-  font-size: 32px;
-  margin-bottom: 10px;
+  /* big, tight, balanced across lines — this is the star of the intro below */
+  font-size: clamp(2.3rem, 1.2rem + 4.6vw, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  max-width: 15em;
+  margin: 0 auto 18px;
+  text-wrap: balance;
 }
 
 .hero p {
-  font-size: 16px;
-  margin-bottom: 26px;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 36em;
+  margin: 0 auto 28px;
+  text-wrap: balance;
 }
 
 .search-bar {
@@ -528,6 +555,514 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
+}
+
+/* ==========================================================================
+   Hero motion — js/hero-fx.js
+   Progressive enhancement. Everything that hides or moves anything is gated
+   on html.hero-fx-armed, which an inline script in index.html's <head> only
+   sets when motion is allowed. With JS off or prefers-reduced-motion on, none
+   of this applies and the hero is just the static block above.
+     armed          -> intro targets are parked (hidden / pushed down)
+     armed + play   -> they animate in; fill-mode "backwards" means the
+                       resting styles are the real end state, no forwards
+                       fill left behind to fight later styles
+   ========================================================================== */
+
+:root { --fx-ease: cubic-bezier(0.16, 1, 0.3, 1); }
+
+.hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+.hero .eyebrow::before,
+.hero .eyebrow::after {
+  content: '';
+  width: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.hero .eyebrow::after { background: linear-gradient(270deg, transparent, var(--gold)); }
+
+.hero .search-bar {
+  max-width: 520px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  transition: transform 0.35s var(--fx-ease), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.hero .search-bar:hover { transform: translateY(-2px); }
+.hero .search-bar:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(217, 164, 65, 0.3), 0 22px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* headline split into words > masked letters (js/hero-fx.js) */
+.hw {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+/* the mask clips letters while they rise; padding + equal negative margin
+   keeps descenders (p, y, g) and overhangs from being clipped without
+   changing the line's layout */
+.hw-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0.06em 0.05em 0.22em;
+  margin: -0.06em -0.05em -0.22em;
+}
+.hw .hl { display: inline-block; }
+
+/* reduced-motion version of the accent: same gold word and underline, no letters to animate */
+.hw--static { color: var(--gold); }
+
+/* accent word: gold, with a light band sweeping across it. The band is one
+   continuous gradient shared by all letters — each letter offsets its own
+   background by its measured position (--ox, in em, set by the script), and
+   the sweep itself is the registered custom property --fx-band animating. */
+@property --fx-band {
+  syntax: '<length>';
+  inherits: true;
+  /* must be an absolute length: a registered property's initial value can't
+     use relative units (em), and an invalid rule silently leaves the property
+     unregistered — which makes the sweep jump instead of glide. The keyframes
+     below are free to use em. */
+  initial-value: -40px;
+}
+.hw--accent .hl { color: var(--gold); }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hw--accent .hl {
+    background-image: linear-gradient(100deg, #c98d2c 0%, #e2a93f 38%, #fff1c9 50%, #e2a93f 62%, #c98d2c 100%);
+    background-size: 10em 100%;
+    background-repeat: repeat-x;
+    background-position: calc(var(--fx-band) - 5em - var(--ox, 0em)) 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* hand-drawn underline beneath the accent word */
+.hw-underline {
+  position: absolute;
+  left: 0;
+  bottom: -0.02em;
+  width: 100%;
+  height: 0.22em;
+  overflow: visible;
+  pointer-events: none;
+}
+.hw-underline path {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 5px rgba(217, 164, 65, 0.6));
+}
+
+/* parked until the intro plays */
+.hero-fx-armed:not(.hero-fx-play) .hero .eyebrow,
+.hero-fx-armed:not(.hero-fx-play) .hero p,
+.hero-fx-armed:not(.hero-fx-play) .hero .search-bar { opacity: 0; }
+.hero-fx-armed:not(.hero-fx-play) .hero .hl { transform: translateY(115%) rotate(8deg); }
+.hero-fx-armed:not(.hero-fx-play) .hero .hw-underline path { stroke-dashoffset: 1; }
+
+/* --dscale shortens every delay for repeat visits in a session (set by the
+   script) — the full sequence is for the first look, not every page view */
+.hero-fx-play .hero .eyebrow {
+  animation: fx-rise 0.9s var(--fx-ease) calc(0.1s * var(--dscale, 1)) backwards;
+}
+.hero-fx-play .hero .hl {
+  animation: fx-letter 1.05s var(--fx-ease) calc((0.2s + var(--i, 0) * 0.032s) * var(--dscale, 1)) backwards;
+}
+.hero-fx-play .hero p {
+  animation: fx-rise 0.9s var(--fx-ease) calc(0.95s * var(--dscale, 1)) backwards;
+}
+.hero-fx-play .hero .search-bar {
+  animation: fx-pop 1s var(--fx-ease) calc(1.15s * var(--dscale, 1)) backwards;
+}
+.hero-fx-play .hero .hw-underline path {
+  animation: fx-draw 0.9s var(--fx-ease) calc(1.1s * var(--dscale, 1)) backwards;
+}
+.hero-fx-play .hero .hw--accent {
+  /* backwards: hold the band off to the left during the delay, so the word
+     starts plain gold and the sweep enters from outside it */
+  animation: fx-band 4.8s ease-in-out calc(1.5s * var(--dscale, 1)) infinite backwards;
+}
+
+@keyframes fx-rise { from { opacity: 0; transform: translateY(22px); } }
+@keyframes fx-pop { from { opacity: 0; transform: translateY(26px) scale(0.94); } }
+@keyframes fx-letter { from { transform: translateY(115%) rotate(8deg); } }
+@keyframes fx-draw { from { stroke-dashoffset: 1; } }
+@keyframes fx-band {
+  0% { --fx-band: -2.4em; }
+  45%, 100% { --fx-band: 5.6em; }
+}
+
+/* ==========================================================================
+   Hero ambient layers — built by js/hero-fx.js, parallax driven by the same
+   script. Static if motion is reduced (animations are gated on html.hero-fx-
+   armed.hero-fx-play, which reduced-motion visitors never get).
+   ========================================================================== */
+
+.hero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity 1.6s ease;
+}
+.hero-fx-armed:not(.hero-fx-play) .hero-fx { opacity: 0; }
+
+/* off-screen: nothing here should cost battery. The leading .hero-fx-armed is
+   deliberate — the `animation` shorthands that start these animations reset
+   play-state to running, and they would win a tie on specificity. (The accent
+   shimmer animates a registered property on the main thread, so it's included.) */
+.hero-fx-armed .hero.is-offscreen .hero-fx,
+.hero-fx-armed .hero.is-offscreen .hero-fx *,
+.hero-fx-armed .hero.is-offscreen .hero-scroll,
+.hero-fx-armed .hero.is-offscreen .hero-scroll::after,
+.hero-fx-armed .hero.is-offscreen .hw--accent { animation-play-state: paused; }
+
+/* --- aurora: big soft glows drifting at different speeds. Radial gradients
+       rather than blurred shapes, so there's no filter cost; only transforms
+       animate, so it all stays on the compositor. */
+.fx-blobs { position: absolute; inset: 0; will-change: transform; }
+.fx-blob { position: absolute; border-radius: 50%; will-change: transform; }
+.fx-blob--a {
+  width: 64vmax; height: 64vmax; left: -22vmax; top: -30vmax;
+  background: radial-gradient(circle, rgba(217, 164, 65, 0.42) 0%, rgba(217, 164, 65, 0) 62%);
+}
+.fx-blob--b {
+  width: 58vmax; height: 58vmax; right: -24vmax; bottom: -30vmax;
+  background: radial-gradient(circle, rgba(196, 112, 66, 0.36) 0%, rgba(196, 112, 66, 0) 62%);
+}
+.fx-blob--c {
+  width: 42vmax; height: 42vmax; left: 34%; top: 22%;
+  background: radial-gradient(circle, rgba(255, 232, 190, 0.14) 0%, rgba(255, 232, 190, 0) 62%);
+}
+.hero-fx-armed.hero-fx-play .fx-blob--a { animation: fx-blob-a 24s ease-in-out infinite alternate; }
+.hero-fx-armed.hero-fx-play .fx-blob--b { animation: fx-blob-b 29s ease-in-out infinite alternate; }
+.hero-fx-armed.hero-fx-play .fx-blob--c { animation: fx-blob-c 34s ease-in-out infinite alternate; }
+@keyframes fx-blob-a { to { transform: translate3d(10vmax, 8vmax, 0) scale(1.18); } }
+@keyframes fx-blob-b { to { transform: translate3d(-12vmax, -7vmax, 0) scale(1.12); } }
+@keyframes fx-blob-c {
+  50% { transform: translate3d(8vmax, -6vmax, 0) scale(1.25); }
+  to { transform: translate3d(-6vmax, 6vmax, 0) scale(0.9); }
+}
+
+/* --- spotlight: a warm glow that follows the pointer (fine pointers only) */
+.fx-spot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 640px;
+  height: 640px;
+  margin: -320px 0 0 -320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 224, 160, 0.22) 0%, rgba(255, 224, 160, 0) 62%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  will-change: transform;
+}
+.hero.is-pointing .fx-spot { opacity: 1; }
+@media (hover: none) { .fx-spot { display: none; } }
+
+/* --- sparkles: tiny four-point stars that fade in and out of the dark */
+.fx-sparkles { position: absolute; inset: 0; }
+.fx-spark {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  background: linear-gradient(135deg, #fff6d8, #e8b04a);
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  opacity: 0.55;
+}
+.hero-fx-armed.hero-fx-play .fx-spark { animation: fx-twinkle var(--dur) ease-in-out var(--del) infinite; }
+@keyframes fx-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  50% { opacity: 0.95; transform: scale(1) rotate(45deg); }
+}
+
+/* --- floating frosted-glass icons. Two layers on purpose: .fx-floater is
+       moved by the script (parallax, via inline transform), .fx-bubble does
+       the entrance + idle bob with the individual translate/rotate/scale
+       properties — they compose instead of overwriting each other. */
+.fx-floaters { position: absolute; inset: 0; }
+.fx-floater {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  will-change: transform;
+}
+/* js/hero-fx.js hides the icons that would land on the text */
+.fx-floater[hidden] { display: none; }
+.fx-bubble {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 30%;
+  color: var(--gold);
+  rotate: var(--r, 0deg);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+}
+.fx-bubble svg {
+  width: 52%;
+  height: 52%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 3px 10px rgba(217, 164, 65, 0.55));
+}
+
+/* positions are %-of-hero, kept in CSS so the breakpoints below can move them.
+   The middle band is the text; icons sit in the side gutters and in the open
+   strips above and below it. Order matches FLOATERS in hero-fx.js. */
+.fx-floater:nth-child(1) { --x: 9%;  --y: 42%; --s: 86px; --r: -9deg;  --bob: 7.2s; --bobd: -1.4s; }
+.fx-floater:nth-child(2) { --x: 91%; --y: 40%; --s: 92px; --r: 8deg;   --bob: 8.4s; --bobd: -3.1s; }
+.fx-floater:nth-child(3) { --x: 18%; --y: 78%; --s: 64px; --r: 10deg;  --bob: 6.3s; --bobd: -0.6s; }
+.fx-floater:nth-child(4) { --x: 82%; --y: 80%; --s: 70px; --r: -8deg;  --bob: 6.9s; --bobd: -2.2s; }
+.fx-floater:nth-child(5) { --x: 31%; --y: 26%; --s: 54px; --r: 12deg;  --bob: 5.8s; --bobd: -4s; }
+.fx-floater:nth-child(6) { --x: 70%; --y: 25%; --s: 58px; --r: -10deg; --bob: 7.7s; --bobd: -1.9s; }
+.fx-floater:nth-child(7) { --x: 63%; --y: 90%; --s: 50px; --r: 14deg;  --bob: 6.1s; --bobd: -3.6s; }
+
+/* entrance (after the headline) then idle bob — parked until the intro plays */
+.hero-fx-armed:not(.hero-fx-play) .fx-bubble { opacity: 0; scale: 0.4; }
+.hero-fx-armed.hero-fx-play .fx-bubble {
+  animation:
+    fx-bubble-in 1s var(--fx-ease) calc((1.25s + var(--n, 0) * 0.13s) * var(--dscale, 1)) backwards,
+    fx-bob var(--bob, 7s) ease-in-out var(--bobd, 0s) infinite alternate;
+}
+@keyframes fx-bubble-in { from { opacity: 0; transform: translateY(36px) scale(0.45); } }
+@keyframes fx-bob {
+  from { translate: 0 0; rotate: var(--r, 0deg); }
+  to { translate: 0 -16px; rotate: calc(var(--r, 0deg) + 5deg); }
+}
+
+/* --- scroll cue: a small mouse with a wheel that ticks down */
+.hero-scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  z-index: 1;
+  width: 24px;
+  height: 38px;
+  margin-left: -12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  opacity: var(--cue, 0.9);
+  pointer-events: none;
+}
+.hero-scroll::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 3px;
+  height: 7px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--gold);
+}
+.hero-fx-armed:not(.hero-fx-play) .hero-scroll { opacity: 0; }
+.hero-fx-armed.hero-fx-play .hero-scroll { animation: fx-cue-in 0.8s var(--fx-ease) calc(2.1s * var(--dscale, 1)) backwards; }
+.hero-fx-armed.hero-fx-play .hero-scroll::after { animation: fx-wheel 1.9s ease-in-out infinite; }
+@keyframes fx-cue-in { from { opacity: 0; transform: translateY(10px); } }
+@keyframes fx-wheel {
+  0% { transform: translateY(0); opacity: 1; }
+  70%, 100% { transform: translateY(12px); opacity: 0; }
+}
+
+/* narrower laptops: the headline can run nearly edge to edge here (French is
+   one long line), so the two big icons drop to sit beside the subtitle and
+   search bar instead of beside the headline */
+@media (max-width: 1400px) {
+  .fx-floater:nth-child(1) { --x: 7%;  --y: 64%; --s: 76px; }
+  .fx-floater:nth-child(2) { --x: 93%; --y: 61%; --s: 80px; }
+}
+/* smaller screens: the text block takes most of the width, so only the icons
+   that sit in the open strips above and below it stay, and smaller */
+@media (max-width: 1100px) {
+  .fx-floater:nth-child(1) { --s: 66px; }
+  .fx-floater:nth-child(2) { --s: 70px; }
+  .fx-floater:nth-child(3) { --x: 14%; }
+  .fx-floater:nth-child(4) { --x: 86%; }
+}
+@media (max-width: 860px) {
+  .fx-floater:nth-child(1),
+  .fx-floater:nth-child(2),
+  .fx-floater:nth-child(7) { display: none; }
+  .fx-floater:nth-child(3) { --x: 12%; --y: 90%; --s: 46px; }
+  .fx-floater:nth-child(4) { --x: 88%; --y: 90%; --s: 48px; }
+  .fx-floater:nth-child(5) { --x: 13%; --y: 24%; --s: 42px; }
+  .fx-floater:nth-child(6) { --x: 87%; --y: 24%; --s: 46px; }
+  .fx-spark:nth-child(n + 10) { display: none; }
+  .hero-scroll { display: none; }
+}
+
+/* ==========================================================================
+   Marquee strip — a band of gold between the hero and the first section, its
+   text scrolling for ever. js/marquee.js builds the loop: two identical groups,
+   each at least as wide as the screen, and a track that slides by exactly one
+   group's width and starts over. It marks the strip .is-ready once that exists.
+   Without .is-ready (no JS, or prefers-reduced-motion) the strip is a still,
+   centred line instead: the first few items, nothing moving.
+   ========================================================================== */
+
+.marquee {
+  position: relative;
+  overflow: hidden;
+  color: var(--navy);
+  background: linear-gradient(180deg, #e3b152 0%, var(--gold) 52%, #c9963a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(var(--navy-rgb), 0.18);
+}
+
+/* above the glint (.marquee::after), so the light passes behind the type */
+.marquee-viewport { position: relative; z-index: 1; }
+
+.marquee-group {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  height: 48px; /* one line of items: the still version shows just the first line */
+  overflow: hidden;
+  padding: 0 12px;
+}
+
+.marquee-group li {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 48px;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* four-point sparkle between the items (the same shape as the hero's) */
+.marquee-group::before,
+.marquee-group li::after {
+  content: '';
+  flex: none;
+  width: 11px;
+  height: 11px;
+  margin: 0 var(--mq-gap, 30px);
+  background: currentColor;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+}
+
+.marquee-toggle {
+  /* visually hidden until a keyboard user tabs to it */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.marquee-toggle:focus-visible {
+  left: 16px;
+  top: 50%;
+  z-index: 3;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 6px 14px;
+  clip-path: none;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--gold);
+  font: 600 12px var(--font-body);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marquee.is-ready .marquee-viewport {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  }
+
+  .marquee.is-ready .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: mq-scroll var(--mq-dur, 60s) linear infinite;
+    will-change: transform;
+  }
+
+  .marquee.is-ready .marquee-group {
+    flex: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow: visible;
+    padding: 0;
+  }
+  .marquee.is-ready .marquee-group::before { display: none; } /* a sparkle between the groups would double up */
+
+  .marquee.is-paused .marquee-track,
+  .marquee.is-offscreen .marquee-track { animation-play-state: paused; }
+
+  /* hover-capable devices only: on a touch screen :hover sticks to whatever
+     was tapped last, which would keep the strip frozen after tapping to resume */
+  @media (hover: hover) {
+    .marquee.is-ready:hover .marquee-track { animation-play-state: paused; }
+  }
+
+  /* a slow glint crossing the gold, like light on foil */
+  .marquee::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 30%;
+    pointer-events: none;
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0));
+    transform: translateX(-120%) skewX(-18deg);
+    animation: mq-glint 7s ease-in-out 1.2s infinite;
+  }
+  .marquee.is-offscreen::after,
+  .marquee.is-paused::after { animation-play-state: paused; }
+}
+
+@keyframes mq-scroll { to { transform: translate3d(-50%, 0, 0); } }
+@keyframes mq-glint {
+  0%, 55% { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(480%) skewX(-18deg); }
+}
+
+@media (max-width: 600px) {
+  .marquee { --mq-gap: 18px; }
+  .marquee-group, .marquee-group li { height: 44px; }
+  .marquee-group li { font-size: 12px; letter-spacing: 0.15em; }
 }
 
 /* ==========================================================================
@@ -569,32 +1104,106 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 18px;
 }
 
-/* scroll-reveal — added to product cards via JS (products.js) as they render;
-   IntersectionObserver adds .in-view once each card scrolls into sight */
+/* scroll-reveal — products.js puts .reveal on the cards (index.html on the
+   section heading) and an IntersectionObserver toggles .in-view as they enter
+   and leave the viewport. It animates opacity and the individual `translate`
+   property, never `transform`, so it can't collide with the hover tilt below.
+   --reveal-delay is each card's stagger, set by the script as a custom property
+   rather than an inline transition-delay: that way it only delays the reveal,
+   not the hover effects later (an inline delay used to hang on every card for
+   good). --reveal-dur is shortened for re-renders (search/filter). */
 .reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 1s ease, transform 1s ease;
+  translate: 0 28px;
+  transition:
+    opacity var(--reveal-dur, 0.8s) ease var(--reveal-delay, 0s),
+    translate calc(var(--reveal-dur, 0.8s) + 0.1s) var(--fx-ease) var(--reveal-delay, 0s);
 }
 
 .reveal.in-view {
   opacity: 1;
-  transform: translateY(0);
+  translate: 0 0;
 }
 
 .product-card {
+  position: relative;
+  isolation: isolate; /* keeps the rounded clip honest while children animate (Safari) */
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: transform 0.15s ease, border-color 0.15s ease;
   display: flex;
   flex-direction: column;
+  /* The reveal's two transitions are restated here on purpose: this rule comes
+     later in the file with the same specificity as .reveal, so a plain
+     `transition` here would replace them. That is what used to make the cards
+     pop in instead of fading. */
+  transition:
+    opacity var(--reveal-dur, 0.8s) ease var(--reveal-delay, 0s),
+    translate calc(var(--reveal-dur, 0.8s) + 0.1s) var(--fx-ease) var(--reveal-delay, 0s),
+    transform var(--tilt-dur, 0.6s) var(--fx-ease),
+    scale 0.4s var(--fx-ease),
+    box-shadow 0.4s ease,
+    border-color 0.2s ease;
 }
 
-.product-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-strong);
+.product-card:hover { border-color: var(--border-strong); }
+
+/* Pointer hover (mouse / trackpad, motion allowed): the card lifts slightly,
+   the photo zooms, and while the pointer is on it js/card-fx.js sets
+     --rx / --ry   tilt in degrees        --tx / --ty   pointer, -1…1 from the centre
+     --mx / --my   pointer in %, for the glare
+   so the card leans away from the pointer, a soft light follows it across the
+   surface and the shadow swings the opposite way. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .product-card:hover {
+    scale: 1.025;
+    box-shadow:
+      0 20px 44px rgba(var(--navy-rgb), 0.16),
+      0 3px 8px rgba(var(--navy-rgb), 0.06);
+  }
+
+  .product-card.is-tilting {
+    --tilt-dur: 0.14s; /* short while following the pointer, long (the default) when letting go */
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    box-shadow:
+      calc(var(--tx, 0) * -16px) calc(var(--ty, 0) * -12px + 20px) 44px rgba(var(--navy-rgb), 0.18),
+      0 3px 8px rgba(var(--navy-rgb), 0.06);
+  }
+
+  /* the light that follows the pointer, in two layers:
+     - .thumb::after is white in `overlay` blend mode, a specular highlight on
+       the photo only (a plain white wash would bleach the gold button and the
+       type); --gy is the pointer's height measured against the photo, so the
+       glow also bleeds in from below while the pointer is over the text
+     - the card's ::before is a faint warm glow, which the white area can show */
+  .product-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background: radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), rgba(217, 164, 65, 0.15), rgba(217, 164, 65, 0));
+  }
+  .product-card .thumb { position: relative; }
+  .product-card .thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background: radial-gradient(circle 190px at var(--mx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+    mix-blend-mode: overlay;
+  }
+  .product-card.is-tilting::before,
+  .product-card.is-tilting .thumb::after { opacity: 1; }
+
+  .product-card .thumb img { transition: transform 0.9s var(--fx-ease); }
+  .product-card:hover .thumb img { transform: scale(1.07); }
 }
 
 .product-card .thumb {
@@ -1314,7 +1923,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 @media (max-width: 720px) {
   .site-nav { order: 3; width: 100%; justify-content: center; gap: 16px; }
-  .hero h1 { font-size: 25px; }
+  .hero .eyebrow { font-size: 11px; letter-spacing: 0.16em; gap: 10px; }
+  .hero .eyebrow::before, .hero .eyebrow::after { width: 20px; }
+  .hero p { font-size: 15.5px; }
   .inquiry-row .stepper-wrap { max-width: none; width: 100%; order: 3; }
   .chat-shell { height: 75vh; }
   .admin-chat-shell { grid-template-columns: 1fr; grid-template-rows: 160px 1fr; height: 70vh; }

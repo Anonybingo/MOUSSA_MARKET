@@ -4,22 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Haki Boutique</title>
+  <script>
+    /* Hero intro (js/hero-fx.js). Arms the page BEFORE first paint so the hero
+       never flashes its final state and then restarts. Skipped entirely for
+       reduced-motion. The timer releases the hero no matter what, so if the
+       script fails to load the content can't stay hidden. */
+    (function () {
+      var d = document.documentElement;
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      d.classList.add('hero-fx-armed');
+      setTimeout(function () { d.classList.add('hero-fx-play'); }, 7000);
+    })();
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" type="image/x-icon" href="/assets/logo.png">
+  <script type="module" src="/js/hero-fx.js"></script>
+  <script type="module" src="/js/marquee.js"></script>
 </head>
 <body>
   <div id="site-header"></div>
 
   <section class="hero">
     <div class="container">
-      <span class="eyebrow" data-i18n="hero_eyebrow">Buy and sell directly</span>
-      <h1 data-i18n="hero_title">Find what you need, deal directly</h1>
-      <p data-i18n="hero_subtitle">Browse listings, then contact the seller to agree on a price.</p>
+      <span class="eyebrow" data-i18n="hero_eyebrow">Comfort &middot; Quality &middot; Style</span>
+      <h1 data-i18n="hero_title">Style that speaks for you</h1>
+      <p data-i18n="hero_subtitle">Discover pieces designed for everyday confidence — browse the collection, then contact us to order.</p>
       <form class="search-bar" onsubmit="event.preventDefault(); window.location.href = '/products/?q=' + encodeURIComponent(this.q.value);">
         <input type="text" name="q" data-i18n-placeholder="search_placeholder" placeholder="Search products...">
         <button type="submit" data-i18n="search_button">Search</button>
       </form>
+    </div>
+  </section>
+
+  <!-- scrolling highlights strip (js/marquee.js builds the seamless loop from this one set) -->
+  <section class="marquee" aria-label="Highlights">
+    <div class="marquee-viewport">
+      <div class="marquee-track">
+        <ul class="marquee-group">
+          <li><span data-i18n="hero_eyebrow">Comfort &middot; Quality &middot; Style</span></li>
+          <li><span data-i18n="marquee_browse">Browse the collection</span></li>
+          <li><span data-i18n="hero_title">Style that speaks for you</span></li>
+          <li><span data-i18n="marquee_contact">Contact us to order</span></li>
+          <li><span data-i18n="marquee_currency">Prices in your currency</span></li>
+          <li><span data-i18n="marquee_chat">Chat with us</span></li>
+          <li><span>English &middot; Kinyarwanda &middot; Fran&ccedil;ais &middot; Kiswahili</span></li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -43,8 +73,11 @@
 
     document.addEventListener('translations-ready', async () => {
       showLoader();
-      await renderFeatured('featured-grid', 3);
-      hideLoader();
+      try {
+        await renderFeatured('featured-grid', 3);
+      } finally {
+        hideLoader(); // even if the fetch fails — a stuck overlay would block the whole page
+      }
     });
     document.addEventListener('currency-changed', () => {
       updatePriceDisplays(document.getElementById('featured-grid'));

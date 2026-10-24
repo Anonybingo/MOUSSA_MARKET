@@ -85,7 +85,11 @@ export function showLoader(message) {
 }
 
 export function hideLoader() {
-  if (!overlay) return;
-  overlay.classList.remove('show');
-  document.body.style.overflow = '';
+  if (overlay) {
+    overlay.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  // lets page-level effects (the home hero intro) wait for the overlay to be
+  // gone instead of playing behind it
+  document.dispatchEvent(new CustomEvent('loader-hidden'));
 }

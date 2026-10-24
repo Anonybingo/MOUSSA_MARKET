@@ -2,6 +2,7 @@ import { db } from './firebase-config.js';
 import { collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 import { t } from './i18n.js';
 import { updatePriceDisplays } from './currency.js';
+import './card-fx.js'; // hover tilt + glare for the cards rendered below
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -31,29 +32,49 @@ function emptyStateHTML() {
   return `<div class="empty-state"><i class="ti ti-package" aria-hidden="true"></i><p>${t('browse_no_results')}</p></div>`;
 }
 
+// One shared observer for every .reveal on the page. Re-rendering a grid
+// replaces its cards, so nodes that have left the document are dropped here
+// instead of being watched forever.
+let revealObserver = null;
+
+function getRevealObserver() {
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.target.isConnected) {
+            revealObserver.unobserve(entry.target);
+            return;
+          }
+          entry.target.classList.toggle('in-view', entry.isIntersecting);
+        });
+      },
+      { threshold: 0.15 }
+    );
+  }
+  return revealObserver;
+}
+
 // Fades + slides each element in as it scrolls into view, and back out again
 // if scrolled past the other way — exported so it can also drive the
 // "Featured products" heading right at the hero boundary, not just cards.
-export function activateReveal(mount) {
-  const cards = mount.querySelectorAll('.reveal');
-  if (!cards.length) return;
+// The first render staggers the cards in; `quick` is for re-renders (typing in
+// the search box, changing a filter), which should just appear, briefly.
+export function activateReveal(mount, { quick = false } = {}) {
+  const items = mount.querySelectorAll('.reveal');
+  if (!items.length) return;
 
   if (!('IntersectionObserver' in window)) {
-    cards.forEach((el) => el.classList.add('in-view'));
+    items.forEach((el) => el.classList.add('in-view'));
     return;
   }
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        entry.target.classList.toggle('in-view', entry.isIntersecting);
-      });
-    },
-    { threshold: 0.15 }
-  );
-
-  cards.forEach((el, i) => {
-    el.style.transitionDelay = `${Math.min(i * 150, 600)}ms`;
+  const observer = getRevealObserver();
+  items.forEach((el, i) => {
+    // custom properties, not an inline transition-delay: the stagger must only
+    // apply to the reveal (see .reveal in css/style.css), never to hover effects
+    el.style.setProperty('--reveal-delay', quick ? '0s' : `${Math.min(i * 150, 600)}ms`);
+    if (quick) el.style.setProperty('--reveal-dur', '0.3s');
     observer.observe(el);
   });
 }
@@ -94,8 +115,12 @@ export async function renderProductGrid(mountId, { search = '', category = '' } 
     products = products.filter((p) => p.category === category);
   }
 
+  // only the very first render staggers in; after that (search, filters, a
+  // language switch) the new cards just appear
+  const quick = mount.dataset.rendered === '1';
+  mount.dataset.rendered = '1';
   mount.innerHTML = products.length ? products.map((p) => productCardHTML(p.id, p)).join('') : emptyStateHTML();
-  activateReveal(mount);
+  activateReveal(mount, { quick });
   updatePriceDisplays(mount);
 }
 
