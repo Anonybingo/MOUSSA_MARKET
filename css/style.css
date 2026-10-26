@@ -169,10 +169,20 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 8px;
 }
 
+/* The logo's browns and golds are made for a light ground — on the grey glass
+   the dark H got lost — so it sits on a small cream badge. To show it bare,
+   delete the background / box-shadow / padding lines. */
 .site-logo-mark {
-  height: 30px;
-  width: auto;
   display: block;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  margin: -3px 0; /* the row stays as tall as the buttons; the badge overhangs into the bar's padding */
+  padding: 5px;
+  object-fit: contain;
+  border-radius: 13px;
+  background: rgba(247, 244, 234, 0.94);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 
 .site-logo span { color: var(--gold); }

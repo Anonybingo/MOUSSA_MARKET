@@ -13,7 +13,8 @@ countries, and an instant currency converter (see "Currency conversion"
 below). The rebrand only touches presentation — colors, copy, the footer
 and header markup, and the logo asset; none of it changes the data model,
 Firestore rules, or how any existing feature (auth, inquiries, chat,
-admin) works.
+admin) works. The logo was later replaced by a high-resolution version
+(see "Logo and icons" under "What's built" below).
 
 ## What's here
 
@@ -36,11 +37,17 @@ js/firebase-config.js  <- your Firebase project keys go here
 js/i18n.js, lang/*.json    Language switching (EN / RW / FR / SW)
 js/components.js     Shared header/footer + auth-aware nav
 js/currency.js        Location-based currency detection + live price conversion
-js/hero-fx.js        Home hero: headline intro, floating glass icons, aurora, parallax
+js/hero-fx.js        Home hero conductor: when to start (after the loader), the clock, input, the loop
+js/hero-intro.js     The hero intro (dot, "!", tumbling letters, HAKI -> BOUTIQUE) and the big word
+js/hero-dust.js      The gold dust: gathers into the picture; pointer, tap and scroll reactions
+js/hero-picture.js   The picture the dust forms (a shirt on a gold hanger, or your own image)
+js/loader.js         Loading overlay; announces loader-shown / loader-hidden for the hero
 js/card-fx.js        Product-card hover tilt + glare (pulled in by products.js)
 js/marquee.js        The gold ticker strip on the home page
 js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
-assets/logo.png       Haki Boutique logo (cropped/cleaned from the flyer image)
+assets/logo.png       Haki Boutique logo: transparent high-resolution master (662 x 758)
+assets/logo-34.png, logo-68.png, logo-102.png   The navbar's copy of it at 1x / 2x / 3x
+assets/icon-192.png, icon-512.png, apple-touch-icon.png, favicon-32.png, favicon.ico   Tab + home-screen icons
 
 firestore.rules       Firestore security rules — deploy these, see below
 storage.rules        Storage rules — not deployed/needed right now, see below
@@ -218,9 +225,9 @@ Built in this pass, on top of the original marketplace:
   their *own* profile doc (name, photo), but a rule still blocks anyone
   from changing their own `isAdmin` field — every update is checked
   against the value already stored, so it can only ever stay the same.
-- **Haki Boutique rebrand** — real logo in the header (cropped and
-  cleaned up from the shop's flyer image — the dark background around
-  it made transparent, `assets/logo.png`), the color palette swapped
+- **Haki Boutique rebrand** — real logo in the header (first cropped and
+  cleaned up from the shop's flyer image, since replaced by a
+  high-resolution version — see "Logo and icons" below), the color palette swapped
   from navy to a warm brown/gold (same CSS variable names in
   `style.css`, just repointed to new hex values, so every rule that
   already referenced a variable picked up the new look with no
@@ -268,43 +275,80 @@ Built in this pass, on top of the original marketplace:
     place: `COUNTRY_TO_CURRENCY` and `CURRENCY_OPTIONS` near the top of
     `js/currency.js`.
 
+- **Logo and icons.** The shop supplied a clean 1024 px logo (gold hanger
+  over "HB") on a cream background. It was cut out of that background at
+  full resolution — pure background, solid logo, and a thin edge band where
+  each pixel's transparency was worked out from how much cream it contains
+  and its colour taken from the logo beside it, so no cream halo is left on
+  dark or coloured backgrounds — and checked against the shop's own 500 px
+  cut-out (they agree to within an edge pixel). Files in `assets/`:
+  `logo.png` is the transparent master (662 x 758, use it for anything
+  large or printed); `logo-34.png`/`logo-68.png`/`logo-102.png` are the same
+  logo at 1x/2x/3x for the navbar (shown 34 px high, chosen by `srcset` in
+  `components.js`); `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`
+  (on cream, because iPhones fill transparency with black), `favicon-32.png`
+  and `/favicon.ico` (16/32/48) are the browser-tab and home-screen icons,
+  linked from the `<head>` of every page. In the navbar the logo sits on a
+  small cream badge (`.site-logo-mark` in `style.css`) because its browns are
+  made for a light background — the dark H disappeared on the grey glass; to
+  show it bare, delete the badge's `background`, `box-shadow` and `padding`
+  lines. To swap the logo again: replace the artwork, then regenerate the
+  sizes (any image tool will do; keep the file names and the 1x/2x/3x heights).
+
 - **Home-page motion** — three pieces, all progressive enhancement (the
   page is complete without any of them) and all switched off for visitors
   whose device asks for reduced motion:
-  - **Hero intro + ambient layers** (`js/hero-fx.js`, the "Hero motion" and
-    "Hero ambient layers" blocks of `style.css`). The headline is split
-    into words and masked letters that rise in one after another; the
-    longest word of the headline, in whichever language is showing, becomes
-    the gold accent, with a light band sweeping across it and a hand-drawn
-    underline. The subtitle and search bar follow, then seven frosted-glass
-    fashion icons pop in around the text. They bob slowly and shift with the
-    pointer (on touch screens they drift on their own), over a slow
-    gold/copper aurora and twinkling four-point sparkles; with a mouse, a
-    warm spotlight follows the cursor too, and a small scroll cue sits at the
-    bottom. Scrolling fades the hero text out while the text and each layer
-    trail the page at their own rates, which gives the parallax. How it
-    behaves:
-    - An inline script in `index.html`'s `<head>` adds `html.hero-fx-armed`
-      before first paint (unless reduced motion is set), which parks the
-      intro's targets. The intro starts (`hero-fx-play`) once the
-      translations are applied, the web fonts are ready and the loader
-      overlay is gone (`hideLoader()` now dispatches a `loader-hidden`
-      event for this), so it never plays behind the loader. A 7-second timer
-      releases the hero no matter what, so a script failure can't leave it
+  - **Hero: the intro, the word and the dust** (`js/hero-fx.js`,
+    `js/hero-intro.js`, `js/hero-dust.js`, `js/hero-picture.js`, the "Hero"
+    block of `style.css`). The hero is a dark rounded stage with one
+    `<canvas>` behind the copy. The intro follows a developer-portfolio
+    reel (its motion was measured frame by frame, then dressed in the shop's
+    brown and gold): a gold dot drops, squashes and bounces; a stem falls
+    onto it and the two make a "!"; the stem swings and the letters H, A, K
+    tumble out of its pivot and land beside it; the "!" is the I of **HAKI**;
+    the word flickers and turns letter by letter — HAKI, BAKI, BOKI, BOUI,
+    BOUT, BOUTI, BOUTIQ, BOUTIQU, **BOUTIQUE** — and slides down while the
+    tagline and the search bar fade in, and gold dust gathers into a shirt on
+    a hanger behind the word (the hanger is the logo's). Afterwards a light
+    sheen crosses the word every ten seconds; the dust is pushed aside by a
+    mouse pointer, thrown by a tap on a touch screen (where it also drifts
+    slowly on its own), and disperses as you scroll. The tagline is styled
+    like the reel's subtitle: the first half of its words bold white, the rest
+    italic gold, in every language. How it behaves:
+    - **It starts only after the loader, and it is always the full intro.**
+      An inline script in `index.html`'s `<head>` adds `html.hero-fx-armed`
+      before first paint (unless reduced motion is set), which parks the stage
+      and the copy. The intro starts (`hero-fx-play`) once the translations are
+      applied, the web font is in and the loading overlay has gone — about
+      0.45 s after `hideLoader()`, i.e. a beat after the overlay has finished
+      fading out, so the first thing you see is the dot starting to fall.
+      `js/loader.js` dispatches `loader-shown` and `loader-hidden` for this.
+      Every load plays it from its first frame, reloads included (an earlier
+      version played a shortened repeat for a returning visitor in the same
+      tab, which looked like half an animation after a reload; it was
+      removed). The intro's clock also waits — and the CSS reveals with it —
+      while the overlay is up again (it blinks on a language switch), while
+      the tab is hidden, and while the hero is scrolled out of view (a page
+      that reloads scrolled down), then carries on. A 4-second safety net
+      starts it anyway if nothing reports in (never while the overlay is up),
+      and a 6-second timer in the inline script releases the hero as a plain
+      page if `hero-fx.js` never loads, so a script failure can't leave it
       hidden.
-    - It plays in full on the first visit of a session and in about 40% of
-      the time after that. When the language is switched the headline is
-      split again for the new words and its letters rise in again.
-    - Reduced motion (or no JS): no intro, no movement. The layers are still
-      drawn, standing still, and the headline keeps its gold accent word.
-    - Nothing runs while the hero is off screen: the CSS animations pause and
-      the script's render loop stops. With a mouse the loop also sleeps
-      whenever nothing is moving; on touch screens it runs while the hero is
-      visible, because the icons drift on their own.
-    - The icons' positions are percentages in CSS, but where the text really
-      sits depends on the language and the screen, so after layout each icon
-      is checked against the text and the ones that would land on it are
-      hidden for that layout (`clearFloaters()`).
+    - **Skip.** A click or tap on the stage (not on the search box or a link)
+      or any key press jumps to the finished picture. Scrolling does not skip.
+    - **One clock.** The intro is a pure function of a time T, and T is the
+      `currentTime` of a do-nothing Web Animations animation; the CSS reveals
+      of the copy are on the same timeline. The canvas and the text therefore
+      can't drift apart, and the browser's animation inspector (or
+      `document.getAnimations()`) can scrub the whole thing.
+    - **Reduced motion, no JS, no canvas.** No intro, no movement. With
+      reduced motion the finished picture is drawn once on the canvas;
+      without JS or canvas the word BOUTIQUE is plain gold text in the page
+      and the copy is simply there.
+    - **Cost.** Nothing runs while the hero is off screen. After the intro
+      the loop drops to about 25 frames a second unless the pointer, a tap or
+      a scroll is moving the dust, and the dust thins out if frames take too
+      long (12 000 particles on a computer, 6 000 on a phone).
   - **Product cards** (`js/card-fx.js`, `.product-card` in `style.css`).
     Cards fade and slide in one after another as they scroll into view.
     With a mouse or trackpad, a card then leans away from the pointer (up to
@@ -332,22 +376,30 @@ Built in this pass, on top of the original marketplace:
     WCAG 2.2.2). The six strings it adds are `marquee_*` in `lang/*.json`
     (the tagline and the headline are reused from the hero's keys).
 
-  Where to adjust things: the floating icons are `ICONS`/`FLOATERS` in
-  `hero-fx.js` with their positions in the `.fx-floater:nth-child(n)` rules
-  of the CSS; the intro's timing is the `animation` delays in the "Hero
-  motion" block (everything is multiplied by `--dscale`); the ticker's items
-  are the `<li>`s in `index.html` and its pace is `SPEED` in `marquee.js`;
-  tilt strength is `MAX_TILT` in `card-fx.js`. To remove one piece: for the
-  hero, delete both the inline arming script and the `/js/hero-fx.js` tag in
-  `index.html` (the arming script alone would keep the hero's subtitle and
-  search bar hidden for its 7 seconds); for the ticker, delete its
+  Where to adjust things: the intro's timing is the `TL` object at the top of
+  `hero-intro.js` (seconds) and the words it turns through are `WORDS` there;
+  the copy's reveals are the `animation` delays in the "Hero" block of
+  `style.css` (3.45 s onward — they are on the intro's clock, so keep them
+  in step with `TL.slide`); the pause after the loader is `BEAT_MS` in
+  `hero-fx.js`; the dust's amount and strength are in `hero-fx.js` (`N`,
+  `AMBIENT`) and `hero-dust.js`. To put your own picture in the dust instead
+  of the shirt, add `data-hero-image="/assets/your-picture.png"` to
+  `<section class="hero">` in `index.html` (a light subject on a dark or
+  transparent background works best; it has to be on the same site). The
+  ticker's items are the `<li>`s in `index.html` and its pace is `SPEED` in
+  `marquee.js`; tilt strength is `MAX_TILT` in `card-fx.js`. To remove one
+  piece: for the hero, delete both the inline arming script and the
+  `/js/hero-fx.js` tag in `index.html` (the arming script alone would keep
+  the hero's copy hidden for its 6 seconds; without them the hero is the
+  plain dark card with BOUTIQUE in gold); for the ticker, delete its
   `<script>` tag and the `<section class="marquee">`; for the card tilt,
   delete the `import './card-fx.js'` line in `products.js`. Nothing else
-  depends on them. Browser support: this uses the individual
+  depends on them. Browser support: the hero needs canvas 2D, the Web
+  Animations API, `IntersectionObserver` and `ResizeObserver` (every browser
+  from the last several years; without them it falls back to the plain
+  hero); the product cards and ticker use the individual
   `translate`/`scale`/`rotate` properties (Chrome 104+, Safari 14.1+,
-  Firefox 72+) and a registered custom property for the accent shimmer
-  (Chrome 85+, Safari 16.4+, Firefox 128+; without it the shimmer jumps
-  instead of gliding, the word stays gold).
+  Firefox 72+).
 
 Not built yet:
 
@@ -383,13 +435,24 @@ icons against a stubbed Firebase (so no network or account was needed) and
 every animation was stepped frame by frame, which makes the timing
 checkable instead of "looked fine once":
 
-- Hero intro and ambient layers in all four languages at widths from 360 to
-  2560 px: no icon sits on the text (French and Swahili headlines are the
-  longest and needed the collision pass), the gold accent word is the right
-  one, and a language switch or window resize leaves nothing broken.
-- Reduced motion, touch-only devices and a blocked script: each falls back to
-  a complete, still page, and the 7-second timer releases the hero if
-  `hero-fx.js` never runs.
+- The hero, on the real page: the intro played end to end and stepped
+  frame by frame against the reel's frames (dot bounce, stem landing, swing,
+  tumbling letters, word swap, slide, dust); the finished hero at 360, 390,
+  768, 1024, 1280, 1440 and 1920 px wide in all four languages (the copy never
+  touches the word, the tagline wraps cleanly, Kinyarwanda and Swahili are the
+  longest); click and key skip, and that a small scroll does not skip; a
+  pointer pushing the dust aside and it returning, a tap throwing it on a
+  phone, scroll dispersal and recovery; the render loop stopping off screen
+  and idling at about 20-25 frames a second afterwards (also on a phone).
+- The loader hand-off, with a deliberately slow database: nothing of the
+  intro exists while the overlay is up; the intro starts about 0.46 s after
+  the overlay was hidden, when it is completely gone, with the clock at 0; a
+  reload plays the same full intro; the overlay returning mid-intro, a
+  hidden tab, and a page restored scrolled down each hold the clock and the
+  reveals together and release them afterwards. A screen recording of a
+  fresh load shows loader, fade, a calm beat, then the whole intro.
+- Reduced motion, no JS, a blocked script and a canvas that can't be created:
+  each falls back to a complete, still page.
 - The ticker loops without a visible seam at every width tested, speeds up
   and reverses with scrolling, and pauses on hover, off screen, on tap and
   from the keyboard button.

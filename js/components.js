@@ -23,7 +23,7 @@ const HEADER_HTML = `
 <div class="glass-bar">
   <div class="container">
     <a href="/" class="site-logo">
-      <img src="/assets/logo.png" alt="" class="site-logo-mark">
+      <img src="/assets/logo-34.png" srcset="/assets/logo-34.png 1x, /assets/logo-68.png 2x, /assets/logo-102.png 3x" width="30" height="34" alt="" class="site-logo-mark">
       Haki <span>Boutique</span>
     </a>
 

@@ -15,11 +15,16 @@
 //     browser's animation inspector, our tests) scrubs the canvas too.
 //   * when to start: only once the headline text is final (translations), the
 //     web font is in (the canvas draws with it) and the loading overlay is gone
-//   * the loop: requestAnimationFrame, only while the hero is on screen, at half
-//     rate once the intro has finished, and it thins the dust out if frames
-//     take too long
-//   * skip: a click, tap, key press or scroll during the intro jumps to the end
-//   * repeat visits in the same tab get a short version
+//     — and a beat after it has finished fading out, so the first thing you see
+//     of the intro is its very first frame. The whole intro plays on every
+//     load, reloads included.
+//   * the intro's clock only runs while it can be seen: it waits while the
+//     loading overlay is up (a language switch brings it back for a moment),
+//     while the tab is hidden and while the hero is scrolled out of view
+//   * the loop: requestAnimationFrame, only while the hero is on screen, at a
+//     lower rate once the intro has finished, and it thins the dust out if
+//     frames take too long
+//   * skip: a click or tap on the stage, or a key press, jumps to the end
 //   * the tagline: first half of the words bold, second half italic gold
 //
 // Progressive enhancement. An inline script in index.html's <head> sets
@@ -42,8 +47,10 @@ const armed = root.classList.contains('hero-fx-armed');
 const coarse = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
-const QUICK_START = 3.2; // repeat visits start here (the word is already BOUTIQUE) …
-const QUICK_RATE = 1.35; // … and run a little faster
+// The loading overlay (css/style.css .loader-overlay) fades out in 250 ms. The
+// intro starts once that is over, plus a beat of calm, empty stage.
+const LOADER_FADE_MS = 300;
+const BEAT_MS = 150;
 
 /* ==========================================================================
    the tagline: "Style that speaks for you" -> **Style that** *speaks for you*
@@ -107,6 +114,10 @@ function createStage() {
     kicked: false,
     broken: false
   };
+
+  // Why the clock is stopped, if it is: 'loader' (the overlay is up), 'hidden'
+  // (another tab is in front), 'offscreen' (the hero is scrolled out of view).
+  const holds = new Set();
 
   function buildDust(source) {
     const points = samplePicture(source, N, seededRandom(5));
@@ -233,6 +244,7 @@ function createStage() {
     S.raf = 0;
     if (!S.visible || !S.measured || S.broken || S.static) return;
     const T = currentT();
+    if (T < 0) return; // the intro has not started: start() wakes the loop
     try {
       const t0 = performance.now();
       draw(now, T);
@@ -247,14 +259,16 @@ function createStage() {
       fail();
       return;
     }
+    // (on touch screens the picture only drifts slowly by itself: that needs no
+    // more than the idle rate)
     const busy =
       S.pointer.on ||
       S.kicked ||
       dust.busy ||
-      Math.abs(S.tx * 14 - S.parX) > 0.05 ||
-      Math.abs(S.ty * 9 - S.parY) > 0.05;
+      (!coarse && (Math.abs(S.tx * 14 - S.parX) > 0.05 || Math.abs(S.ty * 9 - S.parY) > 0.05));
     S.kicked = false;
-    if (T >= TL.end && !busy) later(IDLE_MS);
+    // idle, or the clock is held: no need for the display's full rate
+    if ((T >= TL.end && !busy) || holds.size) later(IDLE_MS);
     else wake();
   }
 
@@ -289,17 +303,13 @@ function createStage() {
   }
 
   /* ---- the clock ---- */
-  function startClock(quick) {
+  function startClock() {
     // a do-nothing animation whose only job is to count time; the property
     // is one nothing else uses
     S.clock = canvas.animate([{ outlineOffset: '0px' }, { outlineOffset: '0px' }], {
       duration: TL.end * 1000,
       fill: 'forwards'
     });
-    if (quick) {
-      S.clock.currentTime = QUICK_START * 1000;
-      S.clock.playbackRate = QUICK_RATE;
-    }
   }
 
   function heroAnimations() {
@@ -316,6 +326,29 @@ function createStage() {
     }
   }
 
+  // Stop or resume the intro — the canvas clock and the CSS reveals together,
+  // so they can never drift apart.
+  function applyHold() {
+    if (!S.clock) return;
+    const held = holds.size > 0;
+    for (const a of [S.clock, ...heroAnimations()]) {
+      try {
+        if (held && a.playState === 'running') a.pause();
+        else if (!held && a.playState === 'paused') a.play();
+      } catch {
+        /* already finished */
+      }
+    }
+    wake();
+  }
+
+  function hold(reason, on) {
+    const before = holds.size > 0;
+    if (on) holds.add(reason);
+    else holds.delete(reason);
+    if (before !== holds.size > 0) applyHold();
+  }
+
   function skip() {
     if (!S.clock || currentT() >= TL.end) return;
     try {
@@ -327,17 +360,11 @@ function createStage() {
     wake();
   }
 
-  function start(quick) {
-    startClock(quick);
-    root.classList.add('hero-fx-play');
-    if (quick) {
-      // the CSS reveals were just created at their beginning; move them to the same moment
-      for (const a of heroAnimations()) {
-        a.currentTime = QUICK_START * 1000;
-        a.playbackRate = QUICK_RATE;
-      }
-      canvas.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350 });
-    }
+  function start() {
+    startClock();
+    root.classList.add('hero-fx-play'); // the CSS reveals begin with this class
+    if (document.hidden) holds.add('hidden');
+    applyHold(); // begins held if the tab is hidden, the hero is off screen or the overlay is up
     wake();
   }
 
@@ -386,11 +413,11 @@ function createStage() {
       if (t && t.closest && t.closest('input, textarea, select')) return;
       skip();
     });
+    // (scrolling doesn't skip the intro: it simply waits while the hero is out of view)
     window.addEventListener(
       'scroll',
       () => {
         updateScroll();
-        if (window.scrollY > 24) skip();
         wake();
       },
       { passive: true }
@@ -425,29 +452,20 @@ function createStage() {
       document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', schedule);
     }
 
-    // not on screen: no loop (and the clock waits too while the tab is hidden,
-    // so the intro isn't spent on a tab nobody is looking at)
+    // not on screen: no loop, and the clock waits too (a page that reloads
+    // scrolled down, or a visitor who scrolls away mid-intro, gets the rest of
+    // the intro when the hero comes back) — likewise while the tab is hidden
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(
         ([entry]) => {
           S.visible = entry.isIntersecting;
+          hold('offscreen', !S.visible);
           if (S.visible) wake();
         },
         { threshold: 0 }
       ).observe(stage);
     }
-    document.addEventListener('visibilitychange', () => {
-      if (!S.clock || currentT() >= TL.end) return;
-      const list = [S.clock, ...heroAnimations()];
-      for (const a of list) {
-        try {
-          if (document.hidden) a.pause();
-          else a.play();
-        } catch {
-          /* finished */
-        }
-      }
-    });
+    document.addEventListener('visibilitychange', () => hold('hidden', document.hidden));
   }
 
   return {
@@ -456,6 +474,7 @@ function createStage() {
     draw,
     wake,
     start,
+    hold,
     skip,
     bindInput,
     watch,
@@ -500,7 +519,7 @@ function init() {
     document.fonts && document.fonts.load
       ? Promise.race([
           Promise.all([document.fonts.load('800 100px Poppins'), document.fonts.ready]),
-          new Promise((resolve) => setTimeout(resolve, 1500))
+          new Promise((resolve) => setTimeout(resolve, 3000))
         ]).catch(() => {})
       : Promise.resolve();
 
@@ -527,20 +546,19 @@ function init() {
   }
 
   const gates = { translations: false, fonts: false, loader: false };
+  const loaderUp = () => !!document.querySelector('.loader-overlay.show');
   let played = false;
+  let settle = 0; // timer: the overlay was hidden, wait out its fade and the beat
+  let settling = false;
+
   const play = () => {
     if (played) return;
     played = true;
-    let quick = false;
-    try {
-      quick = !!sessionStorage.getItem('heroIntroSeen');
-      sessionStorage.setItem('heroIntroSeen', '1');
-    } catch {
-      /* storage blocked: just no shortened repeat */
-    }
     root.classList.add('hero-canvas-on');
     fx.measure();
-    fx.start(quick);
+    fx.start();
+    // (the safety net below can get here while the overlay is up: the clock waits for it)
+    if (loaderUp()) fx.hold('loader', true);
   };
   const maybePlay = () => {
     if (gates.translations && gates.fonts && gates.loader) play();
@@ -554,22 +572,47 @@ function init() {
     gates.translations = true;
     maybePlay();
   });
-  document.addEventListener('loader-hidden', () => {
-    gates.loader = true;
-    maybePlay();
+
+  // The loading overlay (js/loader.js): the intro never runs behind it. It
+  // starts a beat after the overlay has finished fading out. If the overlay
+  // comes back while the intro plays (switching language reloads the page's
+  // content), the clock waits for it again.
+  document.addEventListener('loader-shown', () => {
+    clearTimeout(settle);
+    settling = false;
+    gates.loader = false;
+    fx.hold('loader', true);
   });
+  document.addEventListener('loader-hidden', () => {
+    clearTimeout(settle);
+    settling = true;
+    // wait out what is left of the fade (a blink of the overlay, as when the
+    // language is switched, has hardly any), and — before the intro has begun —
+    // a beat of calm
+    const o = document.querySelector('.loader-overlay');
+    const up = o ? parseFloat(getComputedStyle(o).opacity) || 0 : 0; // 1: fully up
+    const wait = Math.ceil(up * LOADER_FADE_MS) + (played ? 0 : BEAT_MS);
+    settle = setTimeout(() => {
+      settling = false;
+      if (loaderUp()) return; // shown again in the meantime: its own loader-hidden follows
+      gates.loader = true;
+      fx.hold('loader', false);
+      maybePlay();
+    }, wait);
+  });
+
   fontsReady.then(() => {
     gates.fonts = true;
     maybePlay();
   });
 
   // Safety net if something upstream never reports in (offline, an error in the
-  // page script): go anyway — but never behind a loading overlay that is still up.
-  let waits = 0;
+  // page script): go anyway — but not while the overlay is up or still fading
+  // (the page is then still loading and will report in).
   const fallback = () => {
     if (played) return;
-    if (document.querySelector('.loader-overlay.show') && ++waits < 12) {
-      setTimeout(fallback, 500);
+    if (loaderUp() || settling) {
+      setTimeout(fallback, 250);
       return;
     }
     play();

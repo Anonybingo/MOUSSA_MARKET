@@ -82,6 +82,8 @@ export function showLoader(message) {
   if (textEl) textEl.textContent = message || defaultLoadingText();
   overlay.classList.add('show');
   document.body.style.overflow = 'hidden';
+  // lets page-level effects (the home hero intro) hold still while the overlay is up
+  document.dispatchEvent(new CustomEvent('loader-shown'));
 }
 
 export function hideLoader() {
