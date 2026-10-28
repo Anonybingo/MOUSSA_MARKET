@@ -1,10 +1,11 @@
 // "The Edit": the pinned scroll scene on the home page (CSS: "The Edit" in
 // css/style.css). A tall section scrolls past a dark card that sticks to the
-// screen, and as it does eight garments take shape one after another:
+// screen, and as it does nine things take shape one after another (eight
+// garments and, to finish, a gift box standing for "anything"):
 //
 //     gold dust gathers into a t-shirt  ->  a gold-foil drawing of it condenses
 //     over the dust  ->  it dissolves back into dust  ->  the dust flows into a
-//     pair of socks  ->  ...  ->  sunglasses  ->  the dust scatters
+//     pair of socks  ->  ...  ->  sunglasses  ->  a gift box  ->  the dust scatters
 //
 // EVERYTHING is a function of how far the section has scrolled, so it runs
 // backwards just as well, and jumping to any spot (the dots, the scrollbar, a
@@ -19,13 +20,13 @@
 //   after the last garment the dust scatters again.
 //
 // Parts, all built here around the markup in index.html (a still grid of the same
-// eight drawings, which is what stays if this script can't run):
-//   - a canvas with the dust: ~4000 specks, each given a spot in every garment
+// nine drawings, which is what stays if this script can't run):
+//   - a canvas with the dust: ~4000 specks, each given a spot in every drawing
 //     (picked at random from the drawing, brighter parts more likely, then sorted
 //     so the dust flows from the top of one shape to the top of the next)
 //   - the foil drawings (<img> of the SVGs in /assets/items/, the same pictures the
 //     dust was sampled from, so they line up) with a light sweep across them
-//   - the big outlined word, the counter, the name, the dots, the button
+//   - the big outlined word, the name, the dots, the button
 // The whole thing sleeps while the section is off screen and draws at a low
 // rate while nothing moves. With prefers-reduced-motion, or on a very short
 // screen, none of it runs and the still grid stays.
@@ -137,14 +138,6 @@ function init() {
 
     B.ui = make('div', 'edit-ui');
     B.ui.setAttribute('aria-hidden', 'true');
-    B.count = make('div', 'edit-count', B.ui);
-    const row = make('div', 'edit-count-row', B.count);
-    const nums = make('span', 'edit-nums', row);
-    B.numsCol = make('span', 'edit-nums-col', nums);
-    for (let k = 0; k < N; k++) make('b', '', B.numsCol).textContent = String(k + 1).padStart(2, '0');
-    make('span', 'edit-of', row).textContent = `/ ${String(N).padStart(2, '0')}`;
-    B.bar = make('i', 'edit-bar', B.count);
-    B.barFill = make('i', '', B.bar);
 
     B.caption = make('div', 'edit-caption', B.ui);
     const nameBox = make('div', 'edit-names', B.caption);
@@ -407,7 +400,7 @@ function init() {
 
   /* ---- one frame ---------------------------------------------------------------- */
 
-  const last = { idx: -1, p: -1, hint: null, glow: -1, floor: -1, solid: new Array(N).fill(-1), sh: new Array(N).fill(-1) };
+  const last = { idx: -1, hint: null, glow: -1, floor: -1, solid: new Array(N).fill(-1), sh: new Array(N).fill(-1) };
   let quality = 1;
   let slow = 0;
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -540,12 +533,6 @@ function init() {
         n.classList.toggle('is-before', k < idx);
       });
       built.dot.forEach((d, k) => d.classList.toggle('is-active', k === idx));
-      built.numsCol.style.setProperty('--idx', idx);
-    }
-    const p = clamp(u / (N - 0.5), 0, 1);
-    if (Math.abs(p - last.p) > 0.002) {
-      last.p = p;
-      built.barFill.style.setProperty('--p', p.toFixed(3));
     }
     const hint = u > 0 && u < 0.75;
     if (hint !== last.hint) {

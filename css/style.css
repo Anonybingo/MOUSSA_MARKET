@@ -978,13 +978,14 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* ==========================================================================
    The Edit — a pinned scene between the ribbons and the first products. A dark
-   card sticks to the screen while a tall section scrolls past it, and eight
-   garments take shape out of gold dust one after the other: dust gathers into a
-   t-shirt, a gold-foil drawing of it condenses, dissolves back into dust, which
-   flows into a pair of socks, and so on. js/edit-scene.js draws the dust on a
-   canvas and drives everything else from how far the section has scrolled.
+   card sticks to the screen while a tall section scrolls past it, and nine
+   things (eight garments, then a gift box for "anything") take shape out of gold
+   dust one after the other: dust gathers into a t-shirt, a gold-foil drawing of
+   it condenses, dissolves back into dust, which flows into a pair of socks, and
+   so on. js/edit-scene.js draws the dust on a canvas and drives everything else
+   from how far the section has scrolled.
    The HTML is the still version too: without JS, with prefers-reduced-motion or
-   on a very short screen the card is just a grid of the same eight drawings.
+   on a very short screen the card is just a grid of the same nine drawings.
    html.edit-armed (set before first paint by a script in <head>) is what turns
    the pinned layout on, so the page doesn't jump when the script arrives.
    ========================================================================== */
@@ -1026,10 +1027,11 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .edit-list {
+  --edit-grid-gap: clamp(10px, 2vw, 18px);
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(10px, 2vw, 18px);
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* nine tiles: 3 x 3 */
+  gap: var(--edit-grid-gap);
   margin: clamp(22px, 3vw, 34px) 0 0;
 }
 .edit-list li {
@@ -1072,6 +1074,12 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 @media (max-width: 700px) {
   .edit { margin-left: 10px; margin-right: 10px; }
   .edit-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* the ninth tile would sit alone at the left: centre it under the pair above */
+  .edit-list li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - var(--edit-grid-gap)) / 2);
+  }
 }
 
 /* built by js/edit-scene.js, shown only in the pinned layout below */
@@ -1082,7 +1090,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 @media (prefers-reduced-motion: no-preference) and (min-height: 481px) {
   html.edit-armed .edit {
     --edit-gap: 14px;
-    --edit-n: 8;           /* garments */
+    --edit-n: 9;           /* stops: eight garments and the gift box */
     --edit-unit: 75vh;     /* how far you scroll per garment */
     height: calc(100vh - 2 * var(--edit-gap) + var(--edit-n) * var(--edit-unit));
     margin-bottom: 0;
@@ -1110,26 +1118,16 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
     white-space: nowrap;
   }
 
+  /* no heading on the card: it stays only to name the section for screen readers */
   html.edit-armed .edit-title {
     position: absolute;
-    z-index: 4;
-    left: var(--edit-pad);
-    top: 112px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font: 600 12px/1 var(--font-display);
-    letter-spacing: 0.22em;
-    color: var(--gold);
-    background: none;
-    -webkit-background-clip: border-box;
-    background-clip: border-box;
-  }
-  html.edit-armed .edit-title::before {
-    content: '';
-    width: 34px;
+    width: 1px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold));
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   html.edit-armed .edit-cta {
@@ -1242,25 +1240,6 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   }
 
   /* text and controls */
-  .edit-count {
-    position: absolute;
-    right: var(--edit-pad);
-    top: 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-    font-family: var(--font-ribbon);
-    color: #e8c46a;
-  }
-  .edit-count-row { display: flex; align-items: baseline; gap: 8px; line-height: 1; }
-  .edit-nums { display: block; height: 1em; overflow: hidden; font-size: 46px; }
-  .edit-nums-col { display: block; transform: translate3d(0, calc(var(--idx, 0) * -1em), 0); transition: transform 0.7s var(--fx-ease); }
-  .edit-nums-col b { display: block; height: 1em; font-weight: 400; letter-spacing: 0.02em; }
-  .edit-of { font-size: 20px; opacity: 0.55; letter-spacing: 0.04em; }
-  .edit-bar { display: block; width: 132px; height: 2px; background: rgba(233, 184, 87, 0.22); overflow: hidden; }
-  .edit-bar i { display: block; height: 100%; background: linear-gradient(90deg, #b47a28, #f2d98c); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
-
   .edit-caption {
     position: absolute;
     left: var(--edit-pad);
@@ -1344,12 +1323,6 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   @media (max-width: 700px) {
     html.edit-armed .edit { --edit-gap: 10px; }
     html.edit-armed .edit-stage { --edit-pad: 20px; }
-    html.edit-armed .edit-title { top: 106px; font-size: 11px; letter-spacing: 0.2em; }
-    html.edit-armed .edit-title::before { width: 22px; }
-    .edit-count { top: 96px; gap: 8px; }
-    .edit-nums { font-size: 34px; }
-    .edit-of { font-size: 16px; }
-    .edit-bar { width: 88px; }
     .edit-caption { bottom: 98px; max-width: calc(100% - 40px); }
     .edit-names { font-size: 28px; }
     html.edit-armed .edit-cta { left: var(--edit-pad); right: var(--edit-pad); bottom: 26px; justify-content: center; padding: 16px 22px; }

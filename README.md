@@ -44,14 +44,15 @@ js/hero-picture.js   The picture the dust forms (a shirt on a gold hanger, or yo
 js/loader.js         Loading overlay; announces loader-shown / loader-hidden for the hero
 js/card-fx.js        Product-card hover tilt + glare (pulled in by products.js)
 js/marquee.js        The crossed gold / dark ribbons between the hero and "The Edit"
-js/edit-scene.js     "The Edit": the pinned scroll scene where gold dust becomes eight garments
+js/edit-scene.js     "The Edit": the pinned scroll scene where gold dust becomes eight garments and a gift box
 js/scroll-fx.js      Scroll effects for every page: progress line, rising headings, the .reveal observer
 js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
 assets/logo.png       Haki Boutique logo: transparent high-resolution master (662 x 758)
 assets/logo-34.png, logo-68.png, logo-102.png   The navbar's copy of it at 1x / 2x / 3x
 assets/icon-192.png, icon-512.png, apple-touch-icon.png, favicon-32.png, favicon.ico   Tab + home-screen icons
-assets/items/*.svg    Eight gold-foil garment drawings (t-shirt, socks, cap, sneakers, trousers, dress, bag,
-                     sunglasses): the artwork of "The Edit" and the little icons on the ribbons
+assets/items/*.svg    Nine gold-foil drawings (t-shirt, socks, cap, sneakers, trousers, dress, bag,
+                     sunglasses and a gift box for "Anything"): the artwork of "The Edit"; the
+                     garments are also the little icons on the ribbons
 
 firestore.rules       Firestore security rules — deploy these, see below
 storage.rules        Storage rules — not deployed/needed right now, see below
@@ -391,18 +392,21 @@ Built in this pass, on top of the original marketplace:
   - **The Edit — a pinned scroll scene** (`js/edit-scene.js`, "The Edit" in
     `style.css`, `<section class="edit">` in `index.html`). The one place where
     scrolling *is* the animation. A dark rounded card sticks to the screen while
-    the page scrolls past it, and eight garments take shape one after another:
+    the page scrolls past it, and nine things take shape one after another:
     gold dust gathers into a t-shirt, a gold-foil drawing of it condenses over
     the dust with a light sweep across it, then it dissolves back into dust,
     which flows into a pair of socks, and on through the cap, sneakers,
-    trousers, dress, bag and sunglasses until the dust scatters. Behind each
-    garment its name stands in huge outlined letters that slide in letter by
-    letter; a counter (01 / 08) rolls over, a progress bar fills, the name
-    changes, and a button leads to `/products/`. The small dots at the side jump
-    to a garment (a pointer shortcut; keyboard and screen-reader users have the
-    real list, see below). How it works:
+    trousers, dress, bag and sunglasses to a gold gift box, the last stop,
+    called "Anything" (the shop sells more than these eight garments, and the
+    box says so), until the dust scatters. Behind each stop its name stands in
+    huge outlined letters that slide in letter by letter; the name below
+    changes, and a button leads to `/products/`. There is no heading, counter or
+    progress bar on the card (an earlier version had a "The Edit" label top left
+    and a "01 / 08" counter with a bar top right; both were taken out). The
+    small dots at the side (nine) jump to a stop (a pointer shortcut; keyboard
+    and screen-reader users have the real list, see below). How it works:
     - **Everything is a function of the scroll position.** The position becomes
-      `u` ("units": garment k is in the middle of the screen at u = k) and what is
+      `u` ("units": stop k is in the middle of the screen at u = k) and what is
       drawn is computed from `u` alone, so it runs backwards just as well, and
       jumping anywhere (the dots, the scrollbar, reloading half way down) shows
       exactly the right picture. The `u` that is shown eases toward the real one,
@@ -410,7 +414,7 @@ Built in this pass, on top of the original marketplace:
       the dust flies, when the foil fades in and out) is the constants at the top
       of the file.
     - **The dust** is one `<canvas>`: about 4,200 specks (2,600 on a phone), each
-      given a spot in every garment — picked at random from the drawing in
+      given a spot in every drawing — picked at random from the drawing in
       `assets/items/`, brighter parts more likely, then sorted so the dust flows
       from the top of one shape to the top of the next — and flying between them on
       arcs. Specks are coloured in eight brightness buckets, bronze through gold to
@@ -418,9 +422,12 @@ Built in this pass, on top of the original marketplace:
       stars; a mouse pointer nudges the whole scene a little (parallax).
     - **The foil drawings** are the same SVGs as `<img>`, lined up with the dust.
     - **No JS, reduced motion, a short window:** the section is a plain still grid
-      of the same eight drawings with their names (`<ol class="edit-list">`). The
-      same list is what screen readers read in the live scene (the scene's own
-      text is `aria-hidden`). A script in `index.html`'s `<head>` adds
+      of the same nine drawings with their names (`<ol class="edit-list">`), three
+      by three, or two columns with the ninth tile centred on a phone, under a gold
+      "The Edit" heading. The same list is what screen readers read in the live
+      scene (the scene's own text is `aria-hidden`), and the same `<h2>`, hidden
+      on the card but still there, is what names the section for them. A script
+      in `index.html`'s `<head>` adds
       `html.edit-armed` before the first paint (unless reduced motion is set or
       the window is under 481 px tall) so the page doesn't jump when the scene
       starts; if the scene's script hasn't started within 6 seconds, the class
@@ -429,11 +436,12 @@ Built in this pass, on top of the original marketplace:
     - **Cost.** Nothing runs while the scene is more than a little way off screen.
       When nothing is moving it redraws about 22 times a second (the specks shimmer
       and float); while scrolling, every frame. If frames come late the dust thins
-      out (and never thickens again, so it can't flutter). Each garment gets three
+      out (and never thickens again, so it can't flutter). Each stop gets three
       quarters of a screen height of scrolling (`--edit-unit`, 75svh).
-    - **Changing it.** The garments are the `<li>`s of `.edit-list` in
+    - **Changing it.** The stops are the `<li>`s of `.edit-list` in
       `index.html`, in order: the name is an `edit_*` key in `lang/*.json`, the
-      drawing is `assets/items/<data-item>.svg`. `--edit-n: 8` in `style.css` is
+      drawing is `assets/items/<data-item>.svg` (the ninth is `anything.svg`, the
+      gift box). `--edit-n: 9` in `style.css` is
       the count the layout reserves before the script runs (the script then sets it
       from the list), so change both if you add or remove one. A new drawing should
       be about 240 px square, the subject centred, on a transparent background: the
@@ -498,12 +506,12 @@ pass was checked:
 - Every `.js` file parses cleanly as an ES module (`node --check`).
 - Every `.html` page has balanced tags (scripted check, not just a
   visual skim).
-- `style.css`'s braces balance (455 `{` against 455 `}`, no strays).
+- `style.css`'s braces balance (441 `{` against 441 `}`, no strays).
 - Every `getElementById(...)`/`querySelector('#...')` call in the JS
   matches a real id somewhere in the markup — this is what catches a
   stale reference like the `#nav-user-name` one from an earlier pass
   (fixed; see `profile.js`).
-- All four `lang/*.json` files are valid JSON with the exact same 154
+- All four `lang/*.json` files are valid JSON with the exact same 155
   keys as `en.json`, in the same order — no page can end up missing a
   translation in one language but not another. Every key the JS asks
   for (`t('...')`) and every `data-i18n` attribute in the markup exists.
@@ -543,19 +551,31 @@ checkable instead of "looked fine once":
   only once the loader is gone and the section is in view, pausing on hover, off
   screen, on tap and from the keyboard button, and the still X with reduced
   motion.
-- The Edit (42 scripted checks, frame-by-frame screenshots and two screen
-  recordings, desktop and phone size): all eight garments forming, dissolving and
-  flowing into the next, in all four languages (the longest words, CHAUSSETTES
-  and AMADARUBINDI, fit inside the card, on a phone too); the dots scroll to the
-  right garment; the scene draws nothing while it is off screen, about 20 frames
+- The Edit (70 scripted checks, frame-by-frame screenshots and two screen
+  recordings, desktop and phone size): all nine stops forming, dissolving and
+  flowing into the next, the gift box last, in all four languages (the longest
+  words, CHAUSSETTES, AMADARUBINDI and IKINTU CYOSE, fit inside the card, on a
+  phone too); no "The Edit" label and no counter anywhere on the card at the
+  first, a middle and the last stop, and nothing left over after the last one;
+  the nine dots fit in a window 500 px tall and scroll to the right stop,
+  Anything included; the scene draws nothing while it is off screen, about 20 frames
   a second while nothing moves and every frame while scrolling; reduced motion
   switched on and off while the page is open turns the scene off and on; the
   language can be switched live; reloading half way down shows the right garment
   at once; the pointer moves the big word; no sideways scroll at 1280 x 720,
   390 x 844 and 820 x 1180. The still grid was checked with reduced motion,
-  without JS and in a window 400 px tall. Speed: about 50-60 frames a second
-  while scrolling in the test browser, which has no graphics card (a rough
-  stand-in for a computer; phones were not measured).
+  without JS and in a window 400 px tall (three by three at 1280 and 820 px wide,
+  two columns with the ninth centred at 390). Speed, in a test browser that has
+  no graphics card and so draws everything on the processor (a rough stand-in at
+  best; real phones were not measured): about 50-60 frames a second at 1280 x 720
+  on the machine used for the first round of testing, and about 30 at 1280 x 720
+  and 45-50 at 390 x 844 on the machine used when the ninth stop was added. The
+  version from before that change measured the same there, a plain page without
+  the scene reached 58-60, and the one frame-rate check that asks for 40 frames a
+  second at 1280 x 720 therefore reads about 30 on that machine (everything else
+  passes). A computer or phone with a graphics card should do better; if the scene
+  ever feels heavy, `P` (the number of specks) at the top of `init()` in
+  `edit-scene.js` is the first thing to lower.
 - The scroll effects on every page (33 scripted checks): the progress line
   matches the scroll position (0.5 half way, full at the bottom); headings split
   into words, rise when scrolled to and reset when scrolled away; splitting them
@@ -585,10 +605,13 @@ EN and FR are solid. Kinyarwanda (`lang/rw.json`) and Swahili
 (`lang/sw.json`) are a solid first pass but worth a native-speaker
 read-through before this goes live, especially the Kinyarwanda — it's the
 one I'd trust least of the four. That includes the six `marquee_*`
-strings for the ribbons and the ten `edit_*` strings for The Edit (the eight
-garment names, e.g. Amasogisi, Ingofero, Inkweto, Amadarubindi, and two short
-labels), which are short but were written the same way; the garment words are
-the ones I would have a native speaker look at first.
+strings for the ribbons and the eleven `edit_*` strings for The Edit (the nine
+stop names, e.g. Amasogisi, Ingofero, Inkweto, Amadarubindi, and two short
+labels), which are short but were written the same way; the stop names are the
+ones I would have a native speaker look at first. For the last stop, "Anything",
+the choices are Tout (French), Ikintu cyose (Kinyarwanda) and Chochote
+(Swahili); in French I preferred "Tout" to "N'importe quoi", which can read as
+"nonsense".
 
 ## Data shapes (for reference)
 

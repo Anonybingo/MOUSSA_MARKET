@@ -102,9 +102,11 @@
     </div>
   </section>
 
-  <!-- The Edit: a pinned scene. As you scroll, eight garments take shape out of gold dust
-       (js/edit-scene.js builds the scene around this markup). Without JS, or with
-       prefers-reduced-motion, this is the whole thing: a still grid of the same eight pieces. -->
+  <!-- The Edit: a pinned scene. As you scroll, nine things (eight garments, then a gift box
+       for "anything") take shape out of gold dust (js/edit-scene.js builds the scene around
+       this markup). Without JS, or with prefers-reduced-motion, this is the whole thing: a
+       still grid of the same nine pieces. The h2 is only visible in that still version; on the
+       pinned card it is hidden and just names the section for screen readers. -->
   <section class="edit" id="the-edit" aria-labelledby="edit-title">
     <div class="edit-sticky">
       <div class="edit-stage">
@@ -118,6 +120,7 @@
           <li data-item="dress"><img src="/assets/items/dress.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_dress">Dresses</span></li>
           <li data-item="bag"><img src="/assets/items/bag.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_bag">Bags</span></li>
           <li data-item="sunglasses"><img src="/assets/items/sunglasses.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_sunglasses">Sunglasses</span></li>
+          <li data-item="anything"><img src="/assets/items/anything.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_anything">Anything</span></li>
         </ol>
         <a class="edit-cta" href="/products/" data-i18n="marquee_browse">Browse the collection</a>
       </div>
