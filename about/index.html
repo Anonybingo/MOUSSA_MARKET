@@ -16,10 +16,10 @@
 
   <section class="section">
     <div class="container" style="max-width:640px;">
-      <h1 style="font-size:26px; margin-bottom:10px;" data-i18n="about_title">About this marketplace</h1>
+      <h1 style="font-size:26px; margin-bottom:10px;" data-rise data-i18n="about_title">About this marketplace</h1>
       <p style="color:var(--text-secondary); margin-bottom:24px;" data-i18n="about_subtitle">A simple place to list products and deal directly with buyers.</p>
 
-      <div class="card">
+      <div class="card reveal">
         <p style="margin-bottom:14px;">
           Browse the catalog, and when something catches your eye, use the
           "Contact us" button on that listing. That opens a direct line to
@@ -39,7 +39,9 @@
   <script type="module">
     import { renderChrome } from '/js/components.js';
     import { showLoader, hideLoader } from '/js/loader.js';
+    import { activateReveal } from '/js/scroll-fx.js';
 
+    activateReveal(document.querySelector('.section'), { base: 250 });
     showLoader();
     renderChrome().finally(() => hideLoader());
   </script>

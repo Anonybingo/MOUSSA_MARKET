@@ -7,6 +7,7 @@ import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase
 import { loadLanguage, initLangSwitcher, currentLang } from './i18n.js';
 import { openContactModal } from './contact.js';
 import { initCurrency, getCurrentCurrency, setCurrency } from './currency.js';
+import { activateReveal } from './scroll-fx.js'; // also starts the page-wide scroll effects (progress line, rising headings)
 
 const HEADER_HTML = `
 <div class="header-decor" aria-hidden="true">
@@ -82,24 +83,24 @@ const HEADER_HTML = `
 
 const FOOTER_HTML = `
 <div class="container footer-grid">
-  <div class="footer-col">
+  <div class="footer-col reveal">
     <div class="footer-brand">Haki <span>Boutique</span></div>
     <p class="footer-tagline" data-i18n="footer_tagline">Style that speaks for you.</p>
     <p class="footer-based-in">Based in Kigali, Rwanda</p>
   </div>
-  <div class="footer-col">
+  <div class="footer-col reveal">
     <h4 data-i18n="footer_contact_title">Contact us</h4>
     <a href="tel:+250782006296">+250 782 006 296</a>
     <a href="tel:+250739928876">+250 739 928 876</a>
     <a href="https://wa.me/250781863361" target="_blank" rel="noopener">WhatsApp: +250 781 863 361</a>
     <a href="mailto:hakizimanmoussa@gmail.com">hakizimanmoussa@gmail.com</a>
   </div>
-  <div class="footer-col">
+  <div class="footer-col reveal">
     <h4 data-i18n="footer_countries_title">We deliver to</h4>
     <p>Uganda &middot; Kenya &middot; Rwanda &middot; Burundi &middot; Tanzania</p>
   </div>
 </div>
-<div class="container footer-bottom">
+<div class="container footer-bottom reveal">
   <span>&copy; <span id="footer-year"></span> Haki Boutique &middot; <span data-i18n="footer_rights">All rights reserved.</span></span>
 </div>
 `;
@@ -114,6 +115,7 @@ export async function renderChrome() {
   if (footerMount) {
     footerMount.classList.add('site-footer');
     footerMount.innerHTML = FOOTER_HTML;
+    activateReveal(footerMount, { step: 140 }); // the columns slide up one after another
   }
 
   const yearEl = document.getElementById('footer-year');

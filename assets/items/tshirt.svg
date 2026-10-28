@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240"><defs>
+<linearGradient id="foil" x1="0" y1="0" x2="0.3" y2="1">
+<stop offset="0" stop-color="#FFF2C9"/><stop offset=".26" stop-color="#F3D07E"/><stop offset=".56" stop-color="#DCA843"/><stop offset=".82" stop-color="#B9822C"/><stop offset="1" stop-color="#8C581C"/>
+</linearGradient>
+<linearGradient id="copper" x1="0" y1="0" x2="0.3" y2="1">
+<stop offset="0" stop-color="#F9D0AA"/><stop offset=".45" stop-color="#DB9468"/><stop offset="1" stop-color="#8F512D"/>
+</linearGradient>
+<linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#6B4120"/><stop offset="1" stop-color="#3A2010"/>
+</linearGradient>
+<linearGradient id="gloss" x1="0" y1="0" x2="1" y2="0.55">
+<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".42"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</linearGradient>
+</defs><path d="M88 30 Q120 40 152 30 L194 48 L230 96 L205 120 L187 103 L187 212 Q187 216 183 216 H57 Q53 216 53 212 L53 103 L35 120 L10 96 L46 48 Z" fill="url(#foil)" stroke="#FFF3CE" stroke-opacity=".6" stroke-width="1.6" stroke-linejoin="round"/><path d="M88 30 Q120 40 152 30 L194 48 L230 96 L205 120 L187 103 L187 212 Q187 216 183 216 H57 Q53 216 53 212 L53 103 L35 120 L10 96 L46 48 Z" fill="url(#gloss)"/><path d="M88 30 Q120 40 152 30 C 146 60, 94 60, 88 30 Z" fill="url(#shade)" fill-opacity="0.95" stroke="#FFF3CE" stroke-opacity=".6" stroke-width="1.6" stroke-linejoin="round"/><path d="M88 30 C 96 62, 144 62, 152 30" fill="none" stroke="url(#copper)" stroke-width="7" stroke-linecap="round"/><path d="M88 30 C 96 62, 144 62, 152 30" fill="none" stroke="#4A2A10" stroke-opacity=".5" stroke-width="1.4" transform="translate(0 4.5)"/><path d="M199 111 L222 92" fill="none" stroke="#4A2A10" stroke-opacity=".7" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="3 4.5"/><path d="M41 111 L18 92" fill="none" stroke="#4A2A10" stroke-opacity=".7" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="3 4.5"/><path d="M62 204 H178" fill="none" stroke="#4A2A10" stroke-opacity=".7" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="3 4.5"/><path d="M53 103 L60 120" fill="none" stroke="#4A2A10" stroke-opacity=".82" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M187 103 L180 120" fill="none" stroke="#4A2A10" stroke-opacity=".82" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>

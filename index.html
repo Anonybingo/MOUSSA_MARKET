@@ -24,10 +24,23 @@
       }, 6000);
     })();
   </script>
+  <script>
+    /* The Edit (js/edit-scene.js): reserve the pinned scene's tall layout before first
+       paint, so nothing jumps when the script arrives. Not for reduced motion or very
+       short screens (they get a still grid). The script removes this class again if it
+       can't run the scene, and so does this timer if the script never reports in. */
+    (function () {
+      var d = document.documentElement;
+      if (window.matchMedia && (matchMedia('(prefers-reduced-motion: reduce)').matches || !matchMedia('(min-height: 481px)').matches)) return;
+      d.classList.add('edit-armed');
+      setTimeout(function () { if (!window.__editScene) d.classList.remove('edit-armed'); }, 6000);
+    })();
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <script type="module" src="/js/hero-fx.js"></script>
   <script type="module" src="/js/marquee.js"></script>
+  <script type="module" src="/js/edit-scene.js"></script>
 </head>
 <body>
   <div id="site-header"></div>
@@ -57,28 +70,65 @@
     </div>
   </section>
 
-  <!-- scrolling highlights strip (js/marquee.js builds the seamless loop from this one set) -->
+  <!-- Ribbons: two bands of type crossing in an X (js/marquee.js builds the seamless
+       loops from these two sets of phrases). The little garments between the phrases
+       are CSS masks cut from the drawings in /assets/items/. -->
   <section class="marquee" aria-label="Highlights">
-    <div class="marquee-viewport">
-      <div class="marquee-track">
-        <ul class="marquee-group">
-          <li><span data-i18n="hero_eyebrow">Comfort &middot; Quality &middot; Style</span></li>
-          <li><span data-i18n="marquee_browse">Browse the collection</span></li>
-          <li><span data-i18n="hero_title">Style that speaks for you</span></li>
-          <li><span data-i18n="marquee_contact">Contact us to order</span></li>
-          <li><span data-i18n="marquee_currency">Prices in your currency</span></li>
-          <li><span data-i18n="marquee_chat">Chat with us</span></li>
-          <li><span>English &middot; Kinyarwanda &middot; Fran&ccedil;ais &middot; Kiswahili</span></li>
-        </ul>
+    <div class="mq-stage">
+      <div class="mq-ribbon mq-gold" data-speed="64">
+        <div class="mq-tilt"><i class="mq-glint" aria-hidden="true"></i>
+          <div class="mq-skew"><div class="mq-track">
+            <ul class="mq-group">
+              <li style="--ico:url(/assets/items/tshirt.svg)"><span>Haki Boutique</span></li>
+              <li style="--ico:url(/assets/items/cap.svg)"><span data-i18n="hero_eyebrow">Comfort &middot; Quality &middot; Style</span></li>
+              <li style="--ico:url(/assets/items/trousers.svg)"><span data-i18n="marquee_contact">Contact us to order</span></li>
+              <li style="--ico:url(/assets/items/bag.svg)"><span data-i18n="hero_title">Style that speaks for you</span></li>
+            </ul>
+          </div></div>
+        </div>
+      </div>
+      <div class="mq-ribbon mq-dark" data-speed="52">
+        <div class="mq-tilt"><i class="mq-glint" aria-hidden="true"></i>
+          <div class="mq-skew"><div class="mq-track">
+            <ul class="mq-group">
+              <li style="--ico:url(/assets/items/socks.svg)"><span data-i18n="marquee_browse">Browse the collection</span></li>
+              <li style="--ico:url(/assets/items/sneakers.svg)"><span data-i18n="marquee_currency">Prices in your currency</span></li>
+              <li style="--ico:url(/assets/items/dress.svg)"><span data-i18n="marquee_chat">Chat with us</span></li>
+              <li style="--ico:url(/assets/items/sunglasses.svg)"><span>English &middot; Kinyarwanda &middot; Fran&ccedil;ais &middot; Kiswahili</span></li>
+            </ul>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Edit: a pinned scene. As you scroll, eight garments take shape out of gold dust
+       (js/edit-scene.js builds the scene around this markup). Without JS, or with
+       prefers-reduced-motion, this is the whole thing: a still grid of the same eight pieces. -->
+  <section class="edit" id="the-edit" aria-labelledby="edit-title">
+    <div class="edit-sticky">
+      <div class="edit-stage">
+        <h2 class="edit-title" id="edit-title" data-i18n="edit_eyebrow">The Edit</h2>
+        <ol class="edit-list">
+          <li data-item="tshirt"><img src="/assets/items/tshirt.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_tshirt">T-shirts</span></li>
+          <li data-item="socks"><img src="/assets/items/socks.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_socks">Socks</span></li>
+          <li data-item="cap"><img src="/assets/items/cap.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_cap">Caps</span></li>
+          <li data-item="sneakers"><img src="/assets/items/sneakers.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_sneakers">Sneakers</span></li>
+          <li data-item="trousers"><img src="/assets/items/trousers.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_trousers">Trousers</span></li>
+          <li data-item="dress"><img src="/assets/items/dress.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_dress">Dresses</span></li>
+          <li data-item="bag"><img src="/assets/items/bag.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_bag">Bags</span></li>
+          <li data-item="sunglasses"><img src="/assets/items/sunglasses.svg" alt="" width="240" height="240" loading="lazy" decoding="async"><span data-i18n="edit_sunglasses">Sunglasses</span></li>
+        </ol>
+        <a class="edit-cta" href="/products/" data-i18n="marquee_browse">Browse the collection</a>
       </div>
     </div>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="section-head reveal">
+      <div class="section-head">
         <h2 data-i18n="featured_title">Featured products</h2>
-        <a href="/products/" data-i18n="featured_viewall">View all</a>
+        <a href="/products/" class="reveal" data-i18n="featured_viewall">View all</a>
       </div>
       <div class="product-grid" id="featured-grid"></div>
     </div>
@@ -88,7 +138,8 @@
 
   <script type="module">
     import { renderChrome } from '/js/components.js';
-    import { renderFeatured, activateReveal } from '/js/products.js';
+    import { renderFeatured } from '/js/products.js';
+    import { activateReveal } from '/js/scroll-fx.js';
     import { showLoader, hideLoader } from '/js/loader.js';
     import { updatePriceDisplays } from '/js/currency.js';
 
@@ -104,7 +155,7 @@
       updatePriceDisplays(document.getElementById('featured-grid'));
     });
     renderChrome();
-    activateReveal(document.querySelector('.section'));
+    activateReveal(document.querySelector('.section'), { base: 450 }); // the "View all" link follows the heading
   </script>
 </body>
 </html>

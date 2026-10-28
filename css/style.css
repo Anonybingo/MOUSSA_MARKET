@@ -3,7 +3,7 @@
    Palette: off-white background / navy header / gold accent
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,500;0,600;0,700;0,800;1,500&family=Inter:wght@400;500;600&family=Anton&display=swap');
 
 :root {
   /* Colors — Haki Boutique: warm dark brown + gold, on a white/off-white
@@ -716,60 +716,181 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 /* ==========================================================================
-   Marquee strip — a band of gold between the hero and the first section, its
-   text scrolling for ever. js/marquee.js builds the loop: two identical groups,
-   each at least as wide as the screen, and a track that slides by exactly one
-   group's width and starts over. It marks the strip .is-ready once that exists.
-   Without .is-ready (no JS, or prefers-reduced-motion) the strip is a still,
-   centred line instead: the first few items, nothing moving.
+   Ribbons — the highlights strip between the hero and the first section: two
+   bands of big type crossing in an X, one gold with dark letters, one dark with
+   gold letters, sliding in opposite directions with a little garment between
+   every phrase. js/marquee.js builds the loops: each band holds one set of
+   phrases, repeated until it spans the band and then cloned once, so the track
+   can slide by exactly one set's width and start over. It marks the section
+   .is-ready once that exists, .is-in once the section has come into view (the
+   bands slide in from the sides), and feeds three variables:
+     --mq-skew  the lean of the lettering, from how fast you are scrolling
+     --mq-p     0 -> 1 as the section travels up through the screen; it slides the
+                bands past each other, so the crossing point travels sideways
+   Without .is-ready (no JS, or prefers-reduced-motion) the bands are still: the
+   same X, the first few phrases centred, nothing moving.
    ========================================================================== */
 
+:root { --font-ribbon: 'Anton', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', var(--font-display); }
+
 .marquee {
+  --mq-h: 70px;       /* band height */
+  --mq-fs: 40px;      /* lettering size */
+  --mq-gap: 28px;     /* space either side of a garment */
+  --mq-ico: 32px;     /* garment size */
+  --mq-a: -4.4deg;    /* gold band tilt */
+  --mq-b: 3.6deg;     /* dark band tilt */
+  --mq-lift: 16px;    /* how far --mq-p slides each band, up and down */
+  --mq-p: 0.5;
+  --mq-skew: 0deg;
   position: relative;
   overflow: hidden;
-  color: var(--navy);
-  background: linear-gradient(180deg, #e3b152 0%, var(--gold) 52%, #c9963a 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(var(--navy-rgb), 0.18);
+  padding: 6px 0 24px; /* room for the gold band's shadow */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* above the glint (.marquee::after), so the light passes behind the type */
-.marquee-viewport { position: relative; z-index: 1; }
+.mq-stage {
+  position: relative;
+  height: 232px;
+}
 
-.marquee-group {
+/* wider than the screen, so the tilted ends never show */
+.mq-ribbon {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  top: 50%;
+  height: var(--mq-h);
+  margin-top: calc(var(--mq-h) / -2);
+}
+
+.mq-tilt {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+.mq-gold .mq-tilt { transform: translate3d(0, calc((0.5 - var(--mq-p)) * var(--mq-lift) * 2), 0) rotate(var(--mq-a)); }
+.mq-dark .mq-tilt { transform: translate3d(0, calc((var(--mq-p) - 0.5) * var(--mq-lift) * 2), 0) rotate(var(--mq-b)); }
+
+/* the gold one lies on top and throws its shadow onto the dark one */
+.mq-gold { z-index: 2; }
+.mq-dark { z-index: 1; }
+
+.mq-gold .mq-tilt {
+  color: #2b180b;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0) 24%, rgba(0, 0, 0, 0) 68%, rgba(96, 52, 4, 0.3) 100%),
+    linear-gradient(100deg, #e4b254, #f6dc94 17%, #d9a441 36%, #f0cb74 55%, #cc9636 78%, #f1d283);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 rgba(96, 52, 4, 0.45),
+    0 12px 16px -4px rgba(var(--navy-dark-rgb), 0.34);
+}
+.mq-dark .mq-tilt {
+  color: #e8c46a;
+  background:
+    linear-gradient(180deg, rgba(255, 214, 140, 0.1) 0, rgba(255, 214, 140, 0) 30%),
+    linear-gradient(180deg, #2f1d11, #1a0f08 56%, #26160b);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 214, 140, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+    0 8px 12px -4px rgba(var(--navy-dark-rgb), 0.25);
+}
+
+/* a row of stitches along both edges, like the tape on a garment label */
+.mq-tilt::before,
+.mq-tilt::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.42;
+  background: repeating-linear-gradient(90deg, currentColor 0 8px, transparent 8px 15px);
+}
+.mq-tilt::before { top: 6px; }
+.mq-tilt::after { bottom: 6px; }
+
+/* the lettering leans into its own direction of travel: gold slides left, dark slides right */
+.mq-skew { height: 100%; }
+.mq-gold .mq-skew { transform: skewX(var(--mq-skew)); }
+.mq-dark .mq-skew { transform: skewX(calc(var(--mq-skew) * -1)); }
+
+.mq-track { height: 100%; }
+
+.mq-group {
   list-style: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  height: 48px; /* one line of items: the still version shows just the first line */
+  height: 100%;
   overflow: hidden;
-  padding: 0 12px;
 }
 
-.marquee-group li {
+.mq-group li {
   display: flex;
   align-items: center;
   flex: none;
-  height: 48px;
   white-space: nowrap;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.2em;
+  font-family: var(--font-ribbon);
+  font-weight: 400;
+  font-size: var(--mq-fs);
+  line-height: 1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* nudge: Anton sits a little high in its box */
+.mq-group li > span { padding-top: 0.06em; }
 
-/* four-point sparkle between the items (the same shape as the hero's) */
-.marquee-group::before,
-.marquee-group li::after {
+/* the garment between phrases: the drawing's outline, filled with the band's ink */
+.mq-group li::after {
   content: '';
   flex: none;
-  width: 11px;
-  height: 11px;
-  margin: 0 var(--mq-gap, 30px);
+  width: var(--mq-ico);
+  height: var(--mq-ico);
+  margin: 0 var(--mq-gap);
   background: currentColor;
-  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  -webkit-mask: var(--ico) center / contain no-repeat;
+  mask: var(--ico) center / contain no-repeat;
 }
+
+.mq-gold .mq-group li > span { text-shadow: 0 1px 0 rgba(255, 244, 205, 0.55); }
+
+/* dark band: phrases alternate between an outline and solid gold */
+.mq-dark .mq-group li > span { color: #e8c46a; }
+@supports (-webkit-text-stroke: 1px #000) {
+  .mq-dark .mq-group li:nth-child(odd) > span {
+    color: transparent;
+    -webkit-text-stroke: 1.5px #e8c46a;
+    letter-spacing: 0.06em;
+  }
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .mq-dark .mq-group li:nth-child(even) > span {
+    color: transparent;
+    background: linear-gradient(180deg, #fff3c9 8%, #ecc86e 46%, #b47a28 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}
+
+/* a glint that crosses the foil now and then */
+.mq-glint {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 26%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0));
+  transform: translateX(-130%) skewX(-18deg);
+}
+.mq-dark .mq-glint { background: linear-gradient(100deg, rgba(255, 214, 140, 0), rgba(255, 214, 140, 0.2) 50%, rgba(255, 214, 140, 0)); }
 
 .marquee-toggle {
   /* visually hidden until a keyboard user tabs to it */
@@ -785,79 +906,457 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .marquee-toggle:focus-visible {
   left: 16px;
-  top: 50%;
-  z-index: 3;
+  top: 14px;
+  z-index: 5;
   width: auto;
   height: auto;
   margin: 0;
-  padding: 6px 14px;
+  padding: 7px 16px;
   clip-path: none;
-  transform: translateY(-50%);
   border-radius: 999px;
   background: var(--navy);
   color: var(--gold);
   font: 600 12px var(--font-body);
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .marquee.is-ready .marquee-viewport {
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  /* the bands wait outside the screen and slide in when the section comes up */
+  .marquee.is-ready .mq-ribbon {
+    /* the slight overshoot makes the two bands land on each other */
+    transition: transform 1.35s cubic-bezier(0.22, 1.18, 0.36, 1), opacity 0.5s ease;
   }
+  .marquee.is-ready:not(.is-in) .mq-gold { transform: translate3d(-30%, 0, 0) rotate(-3deg); opacity: 0; }
+  .marquee.is-ready:not(.is-in) .mq-dark { transform: translate3d(30%, 0, 0) rotate(3deg); opacity: 0; }
 
-  .marquee.is-ready .marquee-track {
+  .marquee.is-ready .mq-track {
     display: flex;
     width: max-content;
     animation: mq-scroll var(--mq-dur, 60s) linear infinite;
     will-change: transform;
   }
+  .marquee.is-ready .mq-dark .mq-track { animation-direction: reverse; }
 
-  .marquee.is-ready .marquee-group {
+  .marquee.is-ready .mq-group {
     flex: none;
-    flex-wrap: nowrap;
     justify-content: flex-start;
     overflow: visible;
-    padding: 0;
   }
-  .marquee.is-ready .marquee-group::before { display: none; } /* a sparkle between the groups would double up */
 
-  .marquee.is-paused .marquee-track,
-  .marquee.is-offscreen .marquee-track { animation-play-state: paused; }
+  .marquee.is-paused .mq-track,
+  .marquee.is-offscreen .mq-track { animation-play-state: paused; }
 
   /* hover-capable devices only: on a touch screen :hover sticks to whatever
-     was tapped last, which would keep the strip frozen after tapping to resume */
+     was tapped last, which would keep the bands frozen after tapping to resume */
   @media (hover: hover) {
-    .marquee.is-ready:hover .marquee-track { animation-play-state: paused; }
+    .marquee.is-ready:hover .mq-track { animation-play-state: paused; }
   }
 
-  /* a slow glint crossing the gold, like light on foil */
-  .marquee::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 30%;
-    pointer-events: none;
-    background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0));
-    transform: translateX(-120%) skewX(-18deg);
-    animation: mq-glint 7s ease-in-out 1.2s infinite;
-  }
-  .marquee.is-offscreen::after,
-  .marquee.is-paused::after { animation-play-state: paused; }
+  .marquee.is-ready .mq-glint { opacity: 1; animation: mq-glint 8s ease-in-out 1.4s infinite; }
+  .marquee.is-ready .mq-dark .mq-glint { animation-delay: 5s; }
+  .marquee.is-offscreen .mq-glint,
+  .marquee.is-paused .mq-glint { animation-play-state: paused; }
 }
 
 @keyframes mq-scroll { to { transform: translate3d(-50%, 0, 0); } }
 @keyframes mq-glint {
-  0%, 55% { transform: translateX(-120%) skewX(-18deg); }
-  100% { transform: translateX(480%) skewX(-18deg); }
+  0%, 50% { transform: translateX(-130%) skewX(-18deg); }
+  100% { transform: translateX(520%) skewX(-18deg); }
 }
 
-@media (max-width: 600px) {
-  .marquee { --mq-gap: 18px; }
-  .marquee-group, .marquee-group li { height: 44px; }
-  .marquee-group li { font-size: 12px; letter-spacing: 0.15em; }
+@media (max-width: 900px) {
+  .marquee { --mq-h: 60px; --mq-fs: 34px; --mq-gap: 22px; --mq-ico: 28px; --mq-a: -5.2deg; --mq-b: 4.2deg; --mq-lift: 12px; }
+  .mq-stage { height: 204px; }
+}
+@media (max-width: 560px) {
+  .marquee { --mq-h: 50px; --mq-fs: 28px; --mq-gap: 16px; --mq-ico: 22px; --mq-a: -8deg; --mq-b: 6.5deg; --mq-lift: 9px; }
+  .mq-stage { height: 176px; }
+  .mq-tilt::before { top: 5px; }
+  .mq-tilt::after { bottom: 5px; }
+}
+
+/* ==========================================================================
+   The Edit — a pinned scene between the ribbons and the first products. A dark
+   card sticks to the screen while a tall section scrolls past it, and eight
+   garments take shape out of gold dust one after the other: dust gathers into a
+   t-shirt, a gold-foil drawing of it condenses, dissolves back into dust, which
+   flows into a pair of socks, and so on. js/edit-scene.js draws the dust on a
+   canvas and drives everything else from how far the section has scrolled.
+   The HTML is the still version too: without JS, with prefers-reduced-motion or
+   on a very short screen the card is just a grid of the same eight drawings.
+   html.edit-armed (set before first paint by a script in <head>) is what turns
+   the pinned layout on, so the page doesn't jump when the script arrives.
+   ========================================================================== */
+
+.edit { margin: 0 14px 10px; }
+
+.edit-stage {
+  --edit-pad: clamp(20px, 4.5vw, 56px);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: clamp(20px, 2.4vw, 30px);
+  color: #fff;
+  background:
+    radial-gradient(70% 60% at 50% 0%, rgba(233, 184, 87, 0.14), transparent 70%),
+    radial-gradient(120% 90% at 50% 38%, #2b1b10 0%, #1a0f09 52%, #0d0705 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 224, 170, 0.07), 0 28px 70px -34px rgba(22, 14, 9, 0.7);
+  padding: clamp(40px, 6vw, 72px) var(--edit-pad) clamp(34px, 5vw, 56px);
+}
+
+/* ---- the still version ---------------------------------------------------- */
+
+.edit-title {
+  font-family: var(--font-ribbon);
+  font-weight: 400;
+  font-size: clamp(40px, 7vw, 78px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #e8c46a;
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .edit-title {
+    color: transparent;
+    background: linear-gradient(180deg, #fff3c9 8%, #ecc86e 46%, #b47a28 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}
+
+.edit-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 2vw, 18px);
+  margin: clamp(22px, 3vw, 34px) 0 0;
+}
+.edit-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: clamp(12px, 2vw, 20px) 10px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 224, 170, 0.1);
+}
+.edit-list img { width: 100%; max-width: 150px; height: auto; aspect-ratio: 1; }
+.edit-list li > span {
+  font: 600 14px/1.2 var(--font-display);
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--navy-text);
+}
+
+.edit-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(22px, 3vw, 32px);
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ebc064, var(--gold) 55%, #c9963a);
+  color: var(--gold-text-on);
+  font: 700 14px/1 var(--font-display);
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 24px -10px rgba(217, 164, 65, 0.7);
+  transition: transform 0.25s var(--fx-ease), box-shadow 0.25s ease;
+}
+.edit-cta::after { content: '\2192'; font-size: 17px; transition: transform 0.25s var(--fx-ease); }
+.edit-cta:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 16px 30px -10px rgba(217, 164, 65, 0.85); }
+.edit-cta:hover::after { transform: translateX(4px); }
+.edit-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+@media (max-width: 700px) {
+  .edit { margin-left: 10px; margin-right: 10px; }
+  .edit-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* built by js/edit-scene.js, shown only in the pinned layout below */
+.edit-bg, .edit-ghosts, .edit-solids, .edit-canvas, .edit-ui, .edit-dots { display: none; }
+
+/* ---- the pinned scene ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) and (min-height: 481px) {
+  html.edit-armed .edit {
+    --edit-gap: 14px;
+    --edit-n: 8;           /* garments */
+    --edit-unit: 75vh;     /* how far you scroll per garment */
+    height: calc(100vh - 2 * var(--edit-gap) + var(--edit-n) * var(--edit-unit));
+    margin-bottom: 0;
+  }
+  html.edit-armed .edit-sticky {
+    position: sticky;
+    top: var(--edit-gap, 14px);
+    height: calc(100vh - 2 * var(--edit-gap, 14px));
+  }
+  @supports (height: 100svh) {
+    html.edit-armed .edit { --edit-unit: 75svh; height: calc(100svh - 2 * var(--edit-gap) + var(--edit-n) * var(--edit-unit)); }
+    html.edit-armed .edit-sticky { height: calc(100svh - 2 * var(--edit-gap, 14px)); }
+  }
+  html.edit-armed .edit-stage { height: 100%; padding: 0; }
+
+  /* the list stays for screen readers (the scene itself is decoration) */
+  html.edit-armed .edit-list {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  html.edit-armed .edit-title {
+    position: absolute;
+    z-index: 4;
+    left: var(--edit-pad);
+    top: 112px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font: 600 12px/1 var(--font-display);
+    letter-spacing: 0.22em;
+    color: var(--gold);
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+  }
+  html.edit-armed .edit-title::before {
+    content: '';
+    width: 34px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold));
+  }
+
+  html.edit-armed .edit-cta {
+    position: absolute;
+    z-index: 4;
+    right: var(--edit-pad);
+    bottom: 40px;
+    margin: 0;
+  }
+
+  /* what js/edit-scene.js adds */
+  html.edit-armed .edit-bg,
+  html.edit-armed .edit-ghosts,
+  html.edit-armed .edit-solids,
+  html.edit-armed .edit-canvas,
+  html.edit-armed .edit-ui {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  html.edit-armed .edit-dots { display: flex; }
+  .edit-canvas { width: 100%; height: 100%; z-index: 2; }
+  .edit-bg { z-index: 0; }
+  .edit-ghosts { z-index: 1; }
+  .edit-solids { z-index: 1; }
+  .edit-ui { z-index: 3; }
+
+  .edit-glow {
+    position: absolute;
+    left: calc(var(--cx, 50%) - var(--S, 400px) * 1.25);
+    top: calc(var(--cy, 50%) - var(--S, 400px) * 1.05);
+    width: calc(var(--S, 400px) * 2.5);
+    height: calc(var(--S, 400px) * 2.1);
+    background: radial-gradient(closest-side, rgba(238, 190, 96, 0.34), rgba(238, 190, 96, 0.1) 58%, transparent 100%);
+    opacity: var(--glow, 0);
+  }
+  .edit-floor {
+    position: absolute;
+    left: calc(var(--cx, 50%) - var(--S, 400px) * 0.44);
+    top: calc(var(--cy, 50%) + var(--S, 400px) * 0.46);
+    width: calc(var(--S, 400px) * 0.88);
+    height: calc(var(--S, 400px) * 0.1);
+    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), transparent);
+    filter: blur(5px);
+    opacity: var(--floor, 0);
+  }
+
+  /* the big outlined word behind the garment */
+  .edit-ghost {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--cy, 50%) - 0.55em);
+    height: 1.1em;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    font: 400 var(--gfs, 160px)/1.1 var(--font-ribbon);
+    letter-spacing: 0.012em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(233, 184, 87, 0.045);
+    -webkit-text-stroke: 1.5px rgba(233, 184, 87, 0.36);
+    transform: translate3d(calc(var(--gx, 0) * 1px), calc(var(--gy, 0) * 1px), 0);
+  }
+  .edit-ghost-in { display: inline-flex; }
+  .edit-ch {
+    display: inline-block;
+    transform: translate3d(0, var(--y, 115%), 0);
+    opacity: 0;
+    transition: transform 0.85s var(--fx-ease) calc(var(--i) * 40ms), opacity 0.45s ease calc(var(--i) * 40ms);
+  }
+  .edit-ghost.is-active .edit-ch { --y: 0%; opacity: 1; }
+  .edit-ghost.is-before .edit-ch { --y: -115%; }
+
+  /* the foil drawings */
+  .edit-solid {
+    position: absolute;
+    left: calc(var(--cx, 50%) - var(--S, 400px) / 2);
+    top: calc(var(--cy, 50%) - var(--S, 400px) / 2);
+    width: var(--S, 400px);
+    height: var(--S, 400px);
+    opacity: 0;
+    visibility: hidden;
+    will-change: opacity, transform;
+  }
+  .edit-art {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0;
+    isolation: isolate;
+  }
+  .edit-art img { display: block; width: 100%; height: 100%; }
+  .edit-sheen {
+    position: absolute;
+    inset: 0;
+    /* a narrow band of light; --sh 0 -> 1 carries it from off the left edge to off the right */
+    background: linear-gradient(105deg, transparent 42%, rgba(255, 247, 220, 0.85) 50%, transparent 58%);
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+    background-position: calc((0.9 - var(--sh, 0) * 0.8) * 100%) 0;
+    mix-blend-mode: screen;
+    -webkit-mask: var(--m) center / 100% 100% no-repeat;
+    mask: var(--m) center / 100% 100% no-repeat;
+    opacity: var(--sho, 0);
+  }
+
+  /* text and controls */
+  .edit-count {
+    position: absolute;
+    right: var(--edit-pad);
+    top: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    font-family: var(--font-ribbon);
+    color: #e8c46a;
+  }
+  .edit-count-row { display: flex; align-items: baseline; gap: 8px; line-height: 1; }
+  .edit-nums { display: block; height: 1em; overflow: hidden; font-size: 46px; }
+  .edit-nums-col { display: block; transform: translate3d(0, calc(var(--idx, 0) * -1em), 0); transition: transform 0.7s var(--fx-ease); }
+  .edit-nums-col b { display: block; height: 1em; font-weight: 400; letter-spacing: 0.02em; }
+  .edit-of { font-size: 20px; opacity: 0.55; letter-spacing: 0.04em; }
+  .edit-bar { display: block; width: 132px; height: 2px; background: rgba(233, 184, 87, 0.22); overflow: hidden; }
+  .edit-bar i { display: block; height: 100%; background: linear-gradient(90deg, #b47a28, #f2d98c); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
+
+  .edit-caption {
+    position: absolute;
+    left: var(--edit-pad);
+    bottom: 40px;
+    max-width: min(52%, 520px);
+  }
+  .edit-names { position: relative; height: 1.2em; font: 700 clamp(26px, 3.2vw, 40px)/1.2 var(--font-display); letter-spacing: -0.005em; }
+  .edit-name {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    color: #fff;
+    font: inherit;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate3d(0, 60%, 0);
+    transition: opacity 0.45s ease, transform 0.75s var(--fx-ease);
+  }
+  .edit-name.is-active { opacity: 1; transform: none; }
+  .edit-name.is-before { transform: translate3d(0, -60%, 0); }
+  .edit-sub { margin-top: 6px; font-size: 14px; color: var(--navy-text); }
+
+  .edit-dots {
+    position: absolute;
+    z-index: 4;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .edit-dot {
+    position: relative;
+    width: 28px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .edit-dot::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(233, 184, 87, 0.38);
+    transform: translate(-50%, -50%);
+    transition: height 0.35s var(--fx-ease), background 0.3s ease;
+  }
+  .edit-dot:hover::after { background: rgba(233, 184, 87, 0.8); }
+  .edit-dot.is-active::after { height: 20px; background: #e8c46a; }
+
+  .edit-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transform: translateX(-50%);
+    font: 600 10.5px/1 var(--font-display);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .edit-hint.is-on { opacity: 1; }
+  .edit-hint i { display: block; width: 1px; height: 26px; background: linear-gradient(180deg, rgba(233, 184, 87, 0), #e8c46a); transform-origin: 50% 0; animation: edit-hint 1.8s var(--fx-ease) infinite; }
+  @keyframes edit-hint { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+
+  .edit-cta:focus-visible { outline-offset: 3px; }
+
+  @media (max-width: 700px) {
+    html.edit-armed .edit { --edit-gap: 10px; }
+    html.edit-armed .edit-stage { --edit-pad: 20px; }
+    html.edit-armed .edit-title { top: 106px; font-size: 11px; letter-spacing: 0.2em; }
+    html.edit-armed .edit-title::before { width: 22px; }
+    .edit-count { top: 96px; gap: 8px; }
+    .edit-nums { font-size: 34px; }
+    .edit-of { font-size: 16px; }
+    .edit-bar { width: 88px; }
+    .edit-caption { bottom: 98px; max-width: calc(100% - 40px); }
+    .edit-names { font-size: 28px; }
+    html.edit-armed .edit-cta { left: var(--edit-pad); right: var(--edit-pad); bottom: 26px; justify-content: center; padding: 16px 22px; }
+    .edit-dots { right: 4px; }
+    .edit-dot { width: 24px; height: 22px; }
+    .edit-hint { display: none; }
+  }
 }
 
 /* ==========================================================================
@@ -878,6 +1377,69 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .section-head h2 { font-size: 21px; }
 .section-head a { color: var(--navy); font-size: 13px; font-weight: 600; }
+
+/* ==========================================================================
+   Scroll effects shared by every page (js/scroll-fx.js)
+   ========================================================================== */
+
+/* the progress line along the top edge of the window: it fills as the page is read */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 195; /* under the header (200) and the modals (250), over the page */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.scroll-progress.is-on { opacity: 1; }
+.scroll-progress i {
+  display: block;
+  height: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold) 65%, #ffe7a3);
+  box-shadow: 0 0 10px rgba(217, 164, 65, 0.65);
+}
+
+/* A heading that rises: the script wraps every word in a box that clips it, and
+   the word slides up out of the box's bottom edge, one after the other; then a
+   short gold stroke draws itself under the heading. The extra padding (cancelled
+   by the negative margin) keeps descenders and the tops of capitals from being
+   clipped without changing the heading's height. */
+.rise { position: relative; }
+.rise .rw {
+  display: inline-block;
+  vertical-align: top;
+  overflow: hidden;
+  padding: 0.08em 0.05em 0.2em;
+  margin: -0.08em -0.05em -0.2em;
+}
+.rise .rw-in {
+  display: inline-block;
+  translate: 0 118%;
+  transition: translate 0.95s var(--fx-ease) calc(var(--i, 0) * 85ms);
+}
+.rise.in-view .rw-in { translate: 0 0; }
+.rise::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 46px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.7s var(--fx-ease) 0.5s;
+}
+.rise.in-view::after { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) {
+  .rise .rw-in { translate: 0 0; transition: none; }
+  .rise::after { transform: scaleX(1); transition: none; }
+}
 
 .eyebrow {
   color: var(--gold-dark);

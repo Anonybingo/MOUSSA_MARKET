@@ -24,7 +24,7 @@ behavior, works automatically on Firebase Hosting and with the local dev
 servers below, nothing extra to configure.
 
 ```
-index.html            Home — hero, search, featured products
+index.html            Home — hero, ribbons, "The Edit" scroll scene, featured products
 products/index.html    Browse — search + category filter
 product/index.html      Single product + "Contact us" inquiry form
 login/index.html, signup/index.html   Firebase Auth
@@ -43,11 +43,15 @@ js/hero-dust.js      The gold dust: gathers into the picture; pointer, tap and s
 js/hero-picture.js   The picture the dust forms (a shirt on a gold hanger, or your own image)
 js/loader.js         Loading overlay; announces loader-shown / loader-hidden for the hero
 js/card-fx.js        Product-card hover tilt + glare (pulled in by products.js)
-js/marquee.js        The gold ticker strip on the home page
+js/marquee.js        The crossed gold / dark ribbons between the hero and "The Edit"
+js/edit-scene.js     "The Edit": the pinned scroll scene where gold dust becomes eight garments
+js/scroll-fx.js      Scroll effects for every page: progress line, rising headings, the .reveal observer
 js/auth.js, products.js, product-detail.js, dashboard.js, admin.js
 assets/logo.png       Haki Boutique logo: transparent high-resolution master (662 x 758)
 assets/logo-34.png, logo-68.png, logo-102.png   The navbar's copy of it at 1x / 2x / 3x
 assets/icon-192.png, icon-512.png, apple-touch-icon.png, favicon-32.png, favicon.ico   Tab + home-screen icons
+assets/items/*.svg    Eight gold-foil garment drawings (t-shirt, socks, cap, sneakers, trousers, dress, bag,
+                     sunglasses): the artwork of "The Edit" and the little icons on the ribbons
 
 firestore.rules       Firestore security rules — deploy these, see below
 storage.rules        Storage rules — not deployed/needed right now, see below
@@ -166,7 +170,7 @@ Built in this pass, on top of the original marketplace:
   through on first load · product cards and the "Featured products"
   heading fade/slide in as they scroll into view **and back out again**
   scrolling the other way — a real bidirectional toggle, not a one-shot
-  animation (`.reveal` class, `activateReveal()` in `products.js`) ·
+  animation (`.reveal` class; `activateReveal()` now lives in `js/scroll-fx.js`, see "Home-page and scroll motion" below) ·
   a reusable full-screen **loader** with the same falling icons and a
   center spinner (`js/loader.js`), now wired into all 9 pages — shows
   the moment a page starts loading and hides once *that page's* real
@@ -295,7 +299,7 @@ Built in this pass, on top of the original marketplace:
   lines. To swap the logo again: replace the artwork, then regenerate the
   sizes (any image tool will do; keep the file names and the 1x/2x/3x heights).
 
-- **Home-page motion** — three pieces, all progressive enhancement (the
+- **Home-page and scroll motion** — five pieces, all progressive enhancement (the
   page is complete without any of them) and all switched off for visitors
   whose device asks for reduced motion:
   - **Hero: the intro, the word and the dust** (`js/hero-fx.js`,
@@ -363,18 +367,93 @@ Built in this pass, on top of the original marketplace:
     variable (`--reveal-delay`) that only affects the reveal. Re-renders
     (typing in the search box, changing a filter) skip the stagger and just
     fade in quickly; only the first render of a grid staggers.
-  - **Ticker strip** (`js/marquee.js`, "Marquee strip" in `style.css`). A
-    gold band between the hero and "Featured products", scrolling
-    continuously: the tagline, the shop's highlights and the four
-    languages. The HTML holds one set of items; the script repeats it until
-    it spans the screen and clones that group once, so the loop is seamless
-    at any width (checked up to 2560 px) and is rebuilt on resize, language
-    switch and when the web font lands. Scrolling the page down speeds it up
-    and scrolling up reverses it, easing back to its own pace when you stop.
-    It pauses on hover, while off screen, on a tap, and from a button that
-    only keyboard users ever see (moving text needs a way to stop it —
-    WCAG 2.2.2). The six strings it adds are `marquee_*` in `lang/*.json`
-    (the tagline and the headline are reused from the hero's keys).
+  - **Ribbons** (`js/marquee.js`, "Ribbons" in `style.css`). Between the hero
+    and "The Edit", two tilted bands cross in an X: one gold with dark
+    letters, one dark with gold letters, in big condensed type (Anton, loaded
+    from Google Fonts by the `@import` at the top of `style.css`; Impact and
+    similar are the fallback) with a little gold garment between the phrases
+    (the same SVGs as The Edit, drawn with CSS `mask`). The bands slide in
+    opposite directions. The HTML holds one set of phrases per band; the script
+    repeats it until it spans the band and clones that group once, so each loop
+    is seamless at any width (checked up to 2560 px) and is rebuilt on resize,
+    language switch and when the web font lands. The pace is constant in pixels
+    per second: `data-speed` on each band, `SPEED` in `marquee.js` for a band
+    without one. Scrolling the page down speeds both bands up and leans the
+    lettering, scrolling up turns them around, and they ease back to their own
+    pace when you stop; as the section travels up the screen the bands slide
+    past each other, so the point where they cross moves sideways. They slide in
+    the first time a good part of the section is on screen and the loader is
+    gone. They pause on hover, while off screen, on a tap, and from a button
+    that only keyboard users ever see (moving text needs a way to stop it —
+    WCAG 2.2.2). With reduced motion, or without JS, the same X is a still
+    picture. The strings are the `marquee_*` keys in `lang/*.json` (the
+    tagline and the headline are reused from the hero's keys).
+  - **The Edit — a pinned scroll scene** (`js/edit-scene.js`, "The Edit" in
+    `style.css`, `<section class="edit">` in `index.html`). The one place where
+    scrolling *is* the animation. A dark rounded card sticks to the screen while
+    the page scrolls past it, and eight garments take shape one after another:
+    gold dust gathers into a t-shirt, a gold-foil drawing of it condenses over
+    the dust with a light sweep across it, then it dissolves back into dust,
+    which flows into a pair of socks, and on through the cap, sneakers,
+    trousers, dress, bag and sunglasses until the dust scatters. Behind each
+    garment its name stands in huge outlined letters that slide in letter by
+    letter; a counter (01 / 08) rolls over, a progress bar fills, the name
+    changes, and a button leads to `/products/`. The small dots at the side jump
+    to a garment (a pointer shortcut; keyboard and screen-reader users have the
+    real list, see below). How it works:
+    - **Everything is a function of the scroll position.** The position becomes
+      `u` ("units": garment k is in the middle of the screen at u = k) and what is
+      drawn is computed from `u` alone, so it runs backwards just as well, and
+      jumping anywhere (the dots, the scrollbar, reloading half way down) shows
+      exactly the right picture. The `u` that is shown eases toward the real one,
+      so a notch of the mouse wheel doesn't make it jump. The schedule (how long
+      the dust flies, when the foil fades in and out) is the constants at the top
+      of the file.
+    - **The dust** is one `<canvas>`: about 4,200 specks (2,600 on a phone), each
+      given a spot in every garment — picked at random from the drawing in
+      `assets/items/`, brighter parts more likely, then sorted so the dust flows
+      from the top of one shape to the top of the next — and flying between them on
+      arcs. Specks are coloured in eight brightness buckets, bronze through gold to
+      champagne, and drawn in one batch per bucket; a few twinkle as four-point
+      stars; a mouse pointer nudges the whole scene a little (parallax).
+    - **The foil drawings** are the same SVGs as `<img>`, lined up with the dust.
+    - **No JS, reduced motion, a short window:** the section is a plain still grid
+      of the same eight drawings with their names (`<ol class="edit-list">`). The
+      same list is what screen readers read in the live scene (the scene's own
+      text is `aria-hidden`). A script in `index.html`'s `<head>` adds
+      `html.edit-armed` before the first paint (unless reduced motion is set or
+      the window is under 481 px tall) so the page doesn't jump when the scene
+      starts; if the scene's script hasn't started within 6 seconds, the class
+      comes off again and the still grid shows. Switching reduced motion on or off
+      while the page is open turns the scene off or on.
+    - **Cost.** Nothing runs while the scene is more than a little way off screen.
+      When nothing is moving it redraws about 22 times a second (the specks shimmer
+      and float); while scrolling, every frame. If frames come late the dust thins
+      out (and never thickens again, so it can't flutter). Each garment gets three
+      quarters of a screen height of scrolling (`--edit-unit`, 75svh).
+    - **Changing it.** The garments are the `<li>`s of `.edit-list` in
+      `index.html`, in order: the name is an `edit_*` key in `lang/*.json`, the
+      drawing is `assets/items/<data-item>.svg`. `--edit-n: 8` in `style.css` is
+      the count the layout reserves before the script runs (the script then sets it
+      from the list), so change both if you add or remove one. A new drawing should
+      be about 240 px square, the subject centred, on a transparent background: the
+      dust takes its shape and brightness from it.
+  - **Scroll effects on every page** (`js/scroll-fx.js`, "Scroll effects shared by
+    every page" in `style.css`; `components.js` loads it, so every page with the
+    header has them). A thin gold line along the top of the window fills as you
+    read down the page. Section headings (`.section-head h2`, or anything marked
+    `data-rise`) rise into place word by word out of a clipped box, and a short
+    gold stroke draws itself under them. The footer's columns slide up one after
+    another. The one observer behind every `.reveal` (product cards, the footer,
+    the "View all" link) lives here too: `activateReveal()`, which `products.js`
+    still re-exports. None of it plays behind the page loader: while the overlay is
+    up, whatever is on screen waits, and about 0.3 s after it has gone every
+    observer looks again, so the reveals run in front of you (the same idea as the
+    hero's intro). With reduced motion the headings stay plain and the reveals show
+    at once; only the progress line stays, since it is an indicator, not a
+    movement. To use it: put `data-rise` on a heading (plain text only — a heading
+    with child elements is left alone), or give an element `class="reveal"` and
+    call `activateReveal(parent)` once it is in the page.
 
   Where to adjust things: the intro's timing is the `TL` object at the top of
   `hero-intro.js` (seconds) and the words it turns through are `WORDS` there;
@@ -386,20 +465,25 @@ Built in this pass, on top of the original marketplace:
   of the shirt, add `data-hero-image="/assets/your-picture.png"` to
   `<section class="hero">` in `index.html` (a light subject on a dark or
   transparent background works best; it has to be on the same site). The
-  ticker's items are the `<li>`s in `index.html` and its pace is `SPEED` in
-  `marquee.js`; tilt strength is `MAX_TILT` in `card-fx.js`. To remove one
-  piece: for the hero, delete both the inline arming script and the
+  ribbons' phrases are the `<li>`s in `index.html` and each band's pace is its
+  `data-speed` (px per second; `SPEED` in `marquee.js` is the default); tilt
+  strength is `MAX_TILT` in `card-fx.js`. To remove one piece: for the hero, delete both the inline arming script and the
   `/js/hero-fx.js` tag in `index.html` (the arming script alone would keep
   the hero's copy hidden for its 6 seconds; without them the hero is the
-  plain dark card with BOUTIQUE in gold); for the ticker, delete its
-  `<script>` tag and the `<section class="marquee">`; for the card tilt,
-  delete the `import './card-fx.js'` line in `products.js`. Nothing else
-  depends on them. Browser support: the hero needs canvas 2D, the Web
+  plain dark card with BOUTIQUE in gold); for the ribbons, delete
+  their `<script>` tag and the `<section class="marquee">`; for The Edit, delete
+  the `<section class="edit">`, the `/js/edit-scene.js` tag and the arming script
+  in `<head>` (the arming script alone would reserve the scene's tall, empty
+  layout for 6 seconds); for the card tilt, delete the `import './card-fx.js'`
+  line in `products.js`. Nothing else depends on them. Browser support: the hero needs canvas 2D, the Web
   Animations API, `IntersectionObserver` and `ResizeObserver` (every browser
   from the last several years; without them it falls back to the plain
-  hero); the product cards and ticker use the individual
+  hero); the product cards and the rising headings use the individual
   `translate`/`scale`/`rotate` properties (Chrome 104+, Safari 14.1+,
-  Firefox 72+).
+  Firefox 72+); The Edit needs canvas 2D, `position: sticky`,
+  `IntersectionObserver` and `ResizeObserver`, and the ribbons' icons need CSS
+  `mask` (the `-webkit-` form is there for Safari). Without these the still
+  versions show.
 
 Not built yet:
 
@@ -414,12 +498,12 @@ pass was checked:
 - Every `.js` file parses cleanly as an ES module (`node --check`).
 - Every `.html` page has balanced tags (scripted check, not just a
   visual skim).
-- `style.css`'s braces balance (400 `{` against 400 `}`, no strays).
+- `style.css`'s braces balance (455 `{` against 455 `}`, no strays).
 - Every `getElementById(...)`/`querySelector('#...')` call in the JS
   matches a real id somewhere in the markup — this is what catches a
   stale reference like the `#nav-user-name` one from an earlier pass
   (fixed; see `profile.js`).
-- All four `lang/*.json` files are valid JSON with the exact same 144
+- All four `lang/*.json` files are valid JSON with the exact same 154
   keys as `en.json`, in the same order — no page can end up missing a
   translation in one language but not another. Every key the JS asks
   for (`t('...')`) and every `data-i18n` attribute in the markup exists.
@@ -453,15 +537,41 @@ checkable instead of "looked fine once":
   fresh load shows loader, fade, a calm beat, then the whole intro.
 - Reduced motion, no JS, a blocked script and a canvas that can't be created:
   each falls back to a complete, still page.
-- The ticker loops without a visible seam at every width tested, speeds up
-  and reverses with scrolling, and pauses on hover, off screen, on tap and
-  from the keyboard button.
+- The ribbons (32 scripted checks): seamless loops at every width tested and
+  in all four languages, a constant pace per band, speeding up, leaning and
+  reversing with scrolling, the crossing point sliding sideways, the entrance
+  only once the loader is gone and the section is in view, pausing on hover, off
+  screen, on tap and from the keyboard button, and the still X with reduced
+  motion.
+- The Edit (42 scripted checks, frame-by-frame screenshots and two screen
+  recordings, desktop and phone size): all eight garments forming, dissolving and
+  flowing into the next, in all four languages (the longest words, CHAUSSETTES
+  and AMADARUBINDI, fit inside the card, on a phone too); the dots scroll to the
+  right garment; the scene draws nothing while it is off screen, about 20 frames
+  a second while nothing moves and every frame while scrolling; reduced motion
+  switched on and off while the page is open turns the scene off and on; the
+  language can be switched live; reloading half way down shows the right garment
+  at once; the pointer moves the big word; no sideways scroll at 1280 x 720,
+  390 x 844 and 820 x 1180. The still grid was checked with reduced motion,
+  without JS and in a window 400 px tall. Speed: about 50-60 frames a second
+  while scrolling in the test browser, which has no graphics card (a rough
+  stand-in for a computer; phones were not measured).
+- The scroll effects on every page (33 scripted checks): the progress line
+  matches the scroll position (0.5 half way, full at the bottom); headings split
+  into words, rise when scrolled to and reset when scrolled away; splitting them
+  does not change a heading's size or alignment; nothing reveals while the loader
+  is on screen and the reveals start about 0.3 s after it has gone (the About and
+  Products pages); cards still reveal, and a search re-render shows its cards
+  quickly; the footer columns slide in; a language switch (French, Kinyarwanda)
+  keeps the wrapped headings in place; reduced motion leaves headings plain; a
+  phone width has no sideways scroll.
 - Cards fade in one after another, hover effects are not delayed, and
   searching re-renders them quickly.
 - No console errors or uncaught exceptions on any of it.
 
 What was not covered: only Chromium was available, so Safari and Firefox
-are untested. The support notes above come from the specifications, not
+are untested (The Edit and the ribbons in particular lean on `position: sticky`,
+canvas and CSS `mask`, so look at them on a real iPhone). The support notes above come from the specifications, not
 from running those browsers, so give them a look on a real iPhone and a
 Firefox desktop before launch.
 
@@ -474,8 +584,11 @@ blocked the whole page. It now uses `try`/`finally` like the home page.
 EN and FR are solid. Kinyarwanda (`lang/rw.json`) and Swahili
 (`lang/sw.json`) are a solid first pass but worth a native-speaker
 read-through before this goes live, especially the Kinyarwanda — it's the
-one I'd trust least of the four. That includes the six new `marquee_*`
-strings for the ticker, which are short but were written the same way.
+one I'd trust least of the four. That includes the six `marquee_*`
+strings for the ribbons and the ten `edit_*` strings for The Edit (the eight
+garment names, e.g. Amasogisi, Ingofero, Inkweto, Amadarubindi, and two short
+labels), which are short but were written the same way; the garment words are
+the ones I would have a native speaker look at first.
 
 ## Data shapes (for reference)
 
